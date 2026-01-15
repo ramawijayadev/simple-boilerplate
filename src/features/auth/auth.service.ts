@@ -58,12 +58,18 @@ function generateRefreshToken(): string {
  * @param  input  The registration data
  * @throws ValidationError
  */
-export async function register(input: RegisterInput): Promise<{ message: string }> {
+import { ConflictError } from '@/shared/errors';
+
+// ... (imports)
+
+export async function register(
+  input: RegisterInput
+): Promise<{ message: string; user: { id: number; email: string; name: string } }> {
   // Check for existing user registration...
   const existingUser = await authRepository.findUserByEmail(input.email);
 
   if (existingUser) {
-    throw new ValidationError('Email already registered');
+    throw new ConflictError('Email already registered');
   }
 
   // Hash the user's password...
@@ -74,7 +80,12 @@ export async function register(input: RegisterInput): Promise<{ message: string 
   const verificationTokenHash = await hashToken(verificationToken);
   const tokenExpiresAt = addMinutes(new Date(), config.auth.emailTokenExpiresMinutes);
 
-  await authRepository.createUser(input, hashedPassword, verificationTokenHash, tokenExpiresAt);
+  const newUser = await authRepository.createUser(
+    input,
+    hashedPassword,
+    verificationTokenHash,
+    tokenExpiresAt
+  );
 
   // Dispatch verification email...
   const verifyUrl = `http://localhost:3000/verify-email?token=${verificationToken}`;
@@ -85,7 +96,14 @@ export async function register(input: RegisterInput): Promise<{ message: string 
     `Please verify your email by clicking: ${verifyUrl}`
   );
 
-  return { message: 'Registration successful. Please check your email to verify your account.' };
+  return {
+    message: 'Registration successful. Please check your email to verify your account.',
+    user: {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+    },
+  };
 }
 
 /**

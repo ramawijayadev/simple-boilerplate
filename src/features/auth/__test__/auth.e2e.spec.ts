@@ -156,7 +156,7 @@ describe('Auth Feature E2E', () => {
         password: 'Password123!',
       });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(res.body.error.message).toMatch(/already registered/i);
     });
   });

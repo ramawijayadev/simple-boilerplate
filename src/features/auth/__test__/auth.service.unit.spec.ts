@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { User, UserSession } from '@prisma/client';
 import * as authService from '@/features/auth/auth.service';
 import * as authRepository from '@/features/auth/auth.repository';
-import { UnauthorizedError, ValidationError, ForbiddenError } from '@/shared/errors';
+import { UnauthorizedError, ForbiddenError, ConflictError } from '@/shared/errors';
 import argon2 from 'argon2';
 
 // Mock Repository Layer
@@ -30,7 +30,11 @@ describe('AuthService', () => {
   describe('register', () => {
     it('should register a new user successfully', async () => {
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(null);
-      vi.mocked(authRepository.createUser).mockResolvedValue({ id: 1 } as User);
+      vi.mocked(authRepository.createUser).mockResolvedValue({
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test',
+      } as User);
 
       const result = await authService.register({
         name: 'Test',
@@ -40,6 +44,11 @@ describe('AuthService', () => {
 
       expect(result).toEqual({
         message: 'Registration successful. Please check your email to verify your account.',
+        user: {
+          id: 1,
+          email: 'test@example.com',
+          name: 'Test',
+        },
       });
       expect(authRepository.createUser).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Test' }),
@@ -58,7 +67,7 @@ describe('AuthService', () => {
           email: 'exists@example.com',
           password: 'password123',
         })
-      ).rejects.toThrow(ValidationError);
+      ).rejects.toThrow(ConflictError);
     });
   });
 

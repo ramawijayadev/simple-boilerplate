@@ -93,96 +93,280 @@ describe('Full User Journey E2E', () => {
     await prisma.user.deleteMany();
   });
 
-  it('should complete a full user lifecycle: Register -> Login -> Profile -> Examples -> Logout', async () => {
-    // 1. Register
-    vi.stubEnv('NODE_ENV', 'development');
-    const registerRes = await request(app).post('/auth/register').send({
-      name: 'Journey User',
-      email: 'journey@example.com',
-      password: 'SecurePassword123!',
-    });
-    expect(registerRes.status).toBe(201);
-    vi.stubEnv('NODE_ENV', 'test');
-
-    // 2. Login
-    const loginRes = await request(app).post('/auth/login').send({
-      email: 'journey@example.com',
-      password: 'SecurePassword123!',
-    });
-    expect(loginRes.status).toBe(200);
-    const accessToken = loginRes.body.data.accessToken;
-    expect(accessToken).toBeDefined();
-
-    // 3. Get Profile (Me)
-    const meRes = await request(app).get('/auth/me').set('Authorization', `Bearer ${accessToken}`);
-    expect(meRes.status).toBe(200);
-    expect(meRes.body.data.email).toBe('journey@example.com');
-    expect(meRes.body.data.name).toBe('Journey User');
-
-    // 4. Create Example
-    const createExRes = await request(app)
-      .post('/examples')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        name: 'My First Example',
-        description: 'Created during journey',
+  describe('Authentication Module', () => {
+    it('should register a new user successfully (Happy Path)', async () => {
+      vi.stubEnv('NODE_ENV', 'development');
+      const res = await request(app).post('/auth/register').send({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'Password123!',
       });
-    expect(createExRes.status).toBe(201);
-    const exampleId = createExRes.body.data.id;
+      vi.stubEnv('NODE_ENV', 'test');
 
-    // 5. List Examples
-    const listExRes = await request(app)
-      .get('/examples')
-      .set('Authorization', `Bearer ${accessToken}`);
-    expect(listExRes.status).toBe(200);
-    expect(listExRes.body.data).toHaveLength(1);
-    expect(listExRes.body.data[0].name).toBe('My First Example');
+      expect(res.status).toBe(201);
 
-    // 6. Update Example
-    const updateExRes = await request(app)
-      .put(`/examples/${exampleId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({ name: 'Updated Example' });
-    expect(updateExRes.status).toBe(200);
-
-    // 7. Logout
-    const logoutRes = await request(app)
-      .post('/auth/logout')
-      .set('Authorization', `Bearer ${accessToken}`);
-    expect(logoutRes.status).toBe(200);
-
-    // 8. Verify Access Denied after Logout (Revoked Session check optional)
-    // Note: Logout revokes session but JWT might still be valid until expiry UNLESS middleware checks DB session status.
-    // Our middleware:
-    // `const payload = jwt.verify(...)`
-    // It DOES NOT check DB for session status by default in `auth.middleware.ts` (it just verifies signature).
-    // UNLESS `auth.middleware.ts` was updated to check DB?
-    // Let's check `auth.middleware.ts` again.
-    // It only does `jwt.verify`. So creating a new session won't invalidate the old Access Token immediately until it expires (15 mins).
-    // However, Logout revokes the Refresh token session in DB.
-    // If we want strict logout, we need a blacklist or DB check.
-    // Based on `auth.middleware.ts` viewed earlier:
-    // `const payload = jwt.verify(...)`
-    // `req.user = payload;`
-    // It does NOT check DB.
-    // So the Access Token IS STILL VALID.
-    // The user will still be able to hit endpoints until the Access Token expires.
-    // This is standard JWT behavior (stateless).
-    // BUT, the Refresh Token is revoked, so they can't get a *new* Access Token.
-    // The test case "Try to Get Examples (Verify 401)" will FAIL if we expect immediate revocation.
-    // I should clarify this behavior or skip that step, OR if the user expects immediate logout, I need to implement a blacklist or DB check in middleware.
-    // Given the boilerplate simplicity, I assume standard JWT.
-    // I will verify that `refresh` fails.
-
-    // 8a. Verify Refresh Token is dead
-    const refreshToken = loginRes.body.data.refreshToken;
-    const refreshRes = await request(app).post('/auth/refresh').send({
-      refreshToken: refreshToken,
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.user.email).toBe('test@example.com');
+      // Verify DB
+      const user = await prisma.user.findUnique({ where: { email: 'test@example.com' } });
+      expect(user).toBeDefined();
     });
-    expect(refreshRes.status).toBe(401); // "Session revoked" or similar
 
-    // 8b. Access Token validity check (Optional - documenting behavior)
-    // const postLogoutRes = await request(app).get('/auth/me').set('Authorization', `Bearer ${accessToken}`);
-    // expect(postLogoutRes.status).toBe(200); // Still 200 because JWT is valid.
+    it('should fail to register with duplicate email (Negative Case)', async () => {
+      // Create user first
+      await prisma.user.create({
+        data: {
+          name: 'Existing User',
+          email: 'duplicate@example.com',
+          password: 'hash',
+        },
+      });
+
+      const res = await request(app).post('/auth/register').send({
+        name: 'New User',
+        email: 'duplicate@example.com',
+        password: 'Password123!',
+      });
+
+      expect(res.status).toBe(409); // Conflict
+    });
+
+    it('should fail to register with invalid email (Negative Case)', async () => {
+      const res = await request(app).post('/auth/register').send({
+        name: 'Bad Email',
+        email: 'invalid-email',
+        password: 'Password123!',
+      });
+
+      expect(res.status).toBe(400); // Bad Request (Validation)
+    });
+
+    it('should login successfully with correct credentials (Happy Path)', async () => {
+      // Register first
+      vi.stubEnv('NODE_ENV', 'development');
+      await request(app).post('/auth/register').send({
+        name: 'Login User',
+        email: 'login@example.com',
+        password: 'Password123!',
+      });
+      vi.stubEnv('NODE_ENV', 'test');
+
+      const res = await request(app).post('/auth/login').send({
+        email: 'login@example.com',
+        password: 'Password123!',
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.accessToken).toBeDefined();
+      expect(res.body.data.refreshToken).toBeDefined();
+    });
+
+    it('should fail to login with wrong password (Negative Case)', async () => {
+      // Register first
+      vi.stubEnv('NODE_ENV', 'development');
+      await request(app).post('/auth/register').send({
+        name: 'Login User',
+        email: 'wrongpass@example.com',
+        password: 'Password123!',
+      });
+      vi.stubEnv('NODE_ENV', 'test');
+
+      const res = await request(app).post('/auth/login').send({
+        email: 'wrongpass@example.com',
+        password: 'WrongPassword!',
+      });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('should get profile/me with valid token', async () => {
+      // Register & Login
+      vi.stubEnv('NODE_ENV', 'development');
+      await request(app).post('/auth/register').send({
+        name: 'Profile User',
+        email: 'profile@example.com',
+        password: 'Password123!',
+      });
+      vi.stubEnv('NODE_ENV', 'test');
+
+      const loginRes = await request(app).post('/auth/login').send({
+        email: 'profile@example.com',
+        password: 'Password123!',
+      });
+      const token = loginRes.body.data.accessToken;
+
+      const res = await request(app).get('/auth/me').set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.email).toBe('profile@example.com');
+    });
+
+    it('should fail to access protected route without token (Negative/Security)', async () => {
+      const res = await request(app).get('/auth/me');
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe('Example Module (CRUD)', () => {
+    let accessToken: string;
+
+    beforeEach(async () => {
+      // Setup User & Token for CRUD
+      vi.stubEnv('NODE_ENV', 'development');
+      await request(app).post('/auth/register').send({
+        name: 'CRUD User',
+        email: 'crud@example.com',
+        password: 'Password123!',
+      });
+      vi.stubEnv('NODE_ENV', 'test');
+
+      const loginRes = await request(app).post('/auth/login').send({
+        email: 'crud@example.com',
+        password: 'Password123!',
+      });
+      accessToken = loginRes.body.data.accessToken;
+    });
+
+    it('should create a new example (Happy Path)', async () => {
+      const res = await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Test Example',
+          description: 'Description',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.name).toBe('Test Example');
+      expect(res.body.data.id).toBeDefined();
+    });
+
+    it('should fail to create example with missing name (Negative Case)', async () => {
+      const res = await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          description: 'Missing Name',
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should list all examples (Happy Path)', async () => {
+      // Create two examples
+      await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Ex 1' });
+      await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Ex 2' });
+
+      const res = await request(app).get('/examples').set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(2);
+    });
+
+    it('should get a single example by ID (Happy Path)', async () => {
+      const createRes = await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Single Ex' });
+      const id = createRes.body.data.id;
+
+      const res = await request(app)
+        .get(`/examples/${id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.id).toBe(id);
+    });
+
+    it('should return 404 for non-existent example ID (Negative Case)', async () => {
+      const res = await request(app)
+        .get('/examples/999999')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should return 400 for invalid ID format (Edge Case)', async () => {
+      const res = await request(app)
+        .get('/examples/abc')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      // Assuming validation middleware catches non-numeric params if schema defines regex
+      // If schema defines ID as number string, 'abc' fails.
+      expect(res.status).toBe(400);
+    });
+
+    it('should update an example (Happy Path)', async () => {
+      const createRes = await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Original Name' });
+      const id = createRes.body.data.id;
+
+      const res = await request(app)
+        .put(`/examples/${id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Updated Name' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.name).toBe('Updated Name');
+    });
+
+    it('should delete an example (Destructive Path)', async () => {
+      const createRes = await request(app)
+        .post('/examples')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'To Delete' });
+      const id = createRes.body.data.id;
+
+      const res = await request(app)
+        .delete(`/examples/${id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(200);
+
+      // Verify deletion
+      const getRes = await request(app)
+        .get(`/examples/${id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      expect(getRes.status).toBe(404);
+    });
+  });
+
+  describe('Session Management & Security', () => {
+    it('should revoke session on logout', async () => {
+      // Register/Login
+      vi.stubEnv('NODE_ENV', 'development');
+      await request(app).post('/auth/register').send({
+        name: 'Logout User',
+        email: 'logout@example.com',
+        password: 'Password123!',
+      });
+      vi.stubEnv('NODE_ENV', 'test');
+
+      const loginRes = await request(app).post('/auth/login').send({
+        email: 'logout@example.com',
+        password: 'Password123!',
+      });
+      const { accessToken, refreshToken } = loginRes.body.data;
+
+      // Logout
+      const logoutRes = await request(app)
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`);
+      expect(logoutRes.status).toBe(200);
+
+      // Try to Refresh (Should fail)
+      const refreshRes = await request(app).post('/auth/refresh').send({
+        refreshToken,
+      });
+      expect(refreshRes.status).toBe(401);
+    });
   });
 });
