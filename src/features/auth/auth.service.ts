@@ -7,14 +7,14 @@
 
 import jwt from 'jsonwebtoken';
 import { addMinutes, addDays, isAfter } from 'date-fns';
-import { config } from '../../config';
-import { sendEmail } from '../../shared/utils/mailer';
+import { config } from '@/config';
+import { sendEmail } from '@/shared/utils/mailer';
 import {
   hashPassword,
   verifyPassword,
   generateRandomToken,
   hashToken,
-} from '../../shared/utils/crypto';
+} from '@/shared/utils/crypto';
 import * as authRepository from './auth.repository';
 import {
   UserSessionPayload,
@@ -26,7 +26,7 @@ import {
   ForgotPasswordInput,
   ResetPasswordInput
 } from './auth.types';
-import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '../../shared/errors';
+import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '@/shared/errors';
 
 // ============================================
 // Core Logic
@@ -235,6 +235,25 @@ export async function verifyEmail(input: VerifyEmailInput): Promise<void> {
   }
 
   await authRepository.verifyEmail(tokenRecord.userId, tokenRecord.id);
+}
+
+/**
+ * Get the profile of the currently authenticated user.
+ *
+ * @param  userId  The ID of the user
+ * @throws NotFoundError
+ */
+export async function getProfile(userId: number) {
+  const user = await authRepository.findUserById(userId);
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  // Deselect sensitive fields if not handled by repository/ORM
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: _password, ...profile } = user;
+  return profile;
 }
 
 /**

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { User, UserSession } from '@prisma/client';
-import * as authService from '../auth.service';
-import * as authRepository from '../auth.repository';
-import { UnauthorizedError, ValidationError, ForbiddenError } from '../../../shared/errors';
+import * as authService from '@/features/auth/auth.service';
+import * as authRepository from '@/features/auth/auth.repository';
+import { UnauthorizedError, ValidationError, ForbiddenError } from '@/shared/errors';
 import argon2 from 'argon2';
 
 // Mock Repository Layer
-vi.mock('../auth.repository', () => ({
+vi.mock('@/features/auth/auth.repository', () => ({
   findUserByEmail: vi.fn(),
   createUser: vi.fn(),
   updateUserLoginStats: vi.fn(),

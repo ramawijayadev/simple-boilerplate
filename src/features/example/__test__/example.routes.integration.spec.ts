@@ -4,16 +4,27 @@ import request from 'supertest';
 import express, { Request, Response, NextFunction } from 'express';
 import { Example } from '@prisma/client';
 import { Logger } from 'pino';
-import exampleRoutes from '../example.routes';
-import * as exampleService from '../example.service';
-import { errorHandler } from '../../../shared/middlewares/error.middleware';
-import { AppError } from '../../../shared/errors';
+import exampleRoutes from '@/features/example/example.routes';
+import * as exampleService from '@/features/example/example.service';
+import { errorHandler } from '@/shared/middlewares/error.middleware';
+import { AppError } from '@/shared/errors';
 
 // Mock Service Layer
-vi.mock('../example.service');
+vi.mock('@/features/example/example.service');
+
+// Mock Auth Middleware Module
+vi.mock('@/shared/middlewares/auth.middleware', () => ({
+  authenticate: (req: Request, res: Response, next: NextFunction) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (req as any).user = { userId: 1, role: 'user' };
+    next();
+  }
+}));
 
 const app = express();
 app.use(express.json());
+
+
 // Mock Logger Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   (req as Request & { log: Partial<Logger> }).log = { 

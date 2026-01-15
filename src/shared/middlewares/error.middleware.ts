@@ -8,9 +8,9 @@
  */
 
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { AppError, ValidationError } from '../errors';
-import { logger } from '../utils/logger';
-import { isDevelopment } from '../../config';
+import { AppError, ValidationError } from '@/shared/errors';
+import { logger } from '@/shared/utils/logger';
+import { isDevelopment } from '@/config';
 
 /**
  * Standard error response format

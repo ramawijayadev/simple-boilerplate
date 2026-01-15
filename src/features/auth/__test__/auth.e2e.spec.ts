@@ -20,7 +20,7 @@ vi.mock('nodemailer', () => ({
   },
 }));
 
-vi.mock('../../../shared/utils/logger', () => ({
+vi.mock('@/shared/utils/logger', () => ({
   logger: {
     info: vi.fn(),
     warn: vi.fn(),
@@ -31,9 +31,9 @@ vi.mock('../../../shared/utils/logger', () => ({
 }));
 
 // Import implementations after mocks
-import authRoutes from '../auth.routes';
-import { prisma } from '../../../shared/utils/prisma';
-import { UserSessionPayload } from '../auth.types';
+import authRoutes from '@/features/auth/auth.routes';
+import { prisma } from '@/shared/utils/prisma';
+import { UserSessionPayload } from '@/features/auth/auth.types';
 
 // Setup Express App
 const app = express();

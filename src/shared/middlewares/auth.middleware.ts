@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserSessionPayload } from '../types/auth';
-import { UnauthorizedError } from '../errors';
+import { UserSessionPayload } from '@/shared/types/auth';
+import { UnauthorizedError } from '@/shared/errors';
 
-import { config } from '../../config';
+import { config } from '@/config';
 
 /**
  * Authentication Middleware

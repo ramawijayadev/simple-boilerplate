@@ -9,7 +9,7 @@
  */
 
 import pinoHttp from 'pino-http';
-import { logger } from '../utils/logger';
+import { logger } from '@/shared/utils/logger';
 
 export const loggingMiddleware = pinoHttp({
   logger,

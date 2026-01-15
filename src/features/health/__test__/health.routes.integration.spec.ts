@@ -6,13 +6,13 @@ import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 
 // Mock Prisma to avoid database dependency
-vi.mock('../../../shared/utils/prisma', () => ({
+vi.mock('@/shared/utils/prisma', () => ({
   default: {},
   prisma: {},
 }));
 
 // Mock the example repository (since app imports it)
-vi.mock('../../example/example.repository', () => ({
+vi.mock('@/features/example/example.repository', () => ({
   findAll: vi.fn(),
   findById: vi.fn(),
   create: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock('../../example/example.repository', () => ({
 }));
 
 // Import after mocking
-import app from '../../../app';
+import app from '@/app';
 
 describe('Health Routes', () => {
   describe('GET /health', () => {

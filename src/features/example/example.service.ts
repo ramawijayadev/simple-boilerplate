@@ -6,7 +6,7 @@
 
 import * as exampleRepository from './example.repository';
 import type { Example, ExampleId, CreateExampleInput, UpdateExampleInput } from './example.types';
-import { NotFoundError } from '../../shared/errors';
+import { NotFoundError } from '@/shared/errors';
 
 /**
  * Get all examples (excluding soft-deleted)

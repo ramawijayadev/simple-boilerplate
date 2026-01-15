@@ -1,5 +1,5 @@
 
-import { prisma } from '../../shared/utils/prisma';
+import { prisma } from '@/shared/utils/prisma';
 import type { User, UserSession, EmailVerificationToken, PasswordResetToken } from '@prisma/client';
 import { RegisterInput } from './auth.types';
 

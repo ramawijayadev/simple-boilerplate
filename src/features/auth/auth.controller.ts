@@ -13,6 +13,7 @@ import {
   verifyEmail as verifyEmailService,
   forgotPassword as forgotPasswordService,
   resetPassword as resetPasswordService,
+  getProfile as getProfileService,
 } from './auth.service';
 import { UserSessionPayload } from './auth.types';
 
@@ -103,6 +104,29 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
     next(error);
   }
 }
+
+/**
+ * Get current user profile.
+ */
+export async function me(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) {
+      throw new Error('User not authenticated');
+    }
+
+    const { userId } = req.user as UserSessionPayload;
+    const user = await getProfileService(userId);
+
+    res.status(200).json({
+      success: true,
+      data: user,
+      requestId: req.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 
 /**
  * Verify a user's email address.

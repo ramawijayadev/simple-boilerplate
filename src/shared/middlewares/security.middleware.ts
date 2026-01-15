@@ -11,7 +11,7 @@ import rateLimit from 'express-rate-limit';
 import hpp from 'hpp';
 import type { RequestHandler } from 'express';
 
-import { helmetConfig, corsConfig, rateLimitConfig, hppConfig } from '../../config/security';
+import { helmetConfig, corsConfig, rateLimitConfig, hppConfig } from '@/config/security';
 
 /**
  * Helmet Middleware

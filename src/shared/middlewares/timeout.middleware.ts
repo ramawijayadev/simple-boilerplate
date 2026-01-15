@@ -5,8 +5,8 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { config } from '../../config';
-import { AppError } from '../errors';
+import { config } from '@/config';
+import { AppError } from '@/shared/errors';
 
 /**
  * Request Timeout Error (408)

@@ -4,7 +4,7 @@
  * Database operations for the Example model using Prisma.
  */
 
-import prisma from '../../shared/utils/prisma';
+import prisma from '@/shared/utils/prisma';
 import type { Example, CreateExampleInput, UpdateExampleInput, ExampleId } from './example.types';
 
 /**

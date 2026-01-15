@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getHealthStatus } from '../health.service';
+import { getHealthStatus } from '@/features/health/health.service';
 
 describe('Health Service', () => {
   describe('getHealthStatus', () => {

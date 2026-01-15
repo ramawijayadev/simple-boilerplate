@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { validate } from '../../shared/middlewares/validation.middleware';
+import { validate } from '@/shared/middlewares/validation.middleware';
 import {
   createExampleSchema,
   updateExampleSchema,
@@ -12,7 +12,12 @@ import {
 } from './example.schema';
 import { index, show, create, update, destroy } from './example.controller';
 
+import { authenticate } from '@/shared/middlewares/auth.middleware';
+
 const router = Router();
+
+// Apply authentication to all example routes
+router.use(authenticate);
 
 // GET /examples - Get all examples
 router.get('/', index);

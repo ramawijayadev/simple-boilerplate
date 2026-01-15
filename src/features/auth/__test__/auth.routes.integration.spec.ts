@@ -2,13 +2,13 @@ import 'dotenv/config';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import authRoutes from '../auth.routes';
-import * as authService from '../auth.service';
-import { errorHandler } from '../../../shared/middlewares/error.middleware';
-import { UnauthorizedError } from '../../../shared/errors';
+import authRoutes from '@/features/auth/auth.routes';
+import * as authService from '@/features/auth/auth.service';
+import { errorHandler } from '@/shared/middlewares/error.middleware';
+import { UnauthorizedError } from '@/shared/errors';
 
 // Mock the Service Layer to isolate Controller logic
-vi.mock('../auth.service');
+vi.mock('@/features/auth/auth.service');
 
 const app = express();
 app.use(express.json());

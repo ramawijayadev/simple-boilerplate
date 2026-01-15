@@ -9,7 +9,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 import { z, ZodError, ZodSchema } from 'zod';
-import { ValidationError, ValidationDetail } from '../errors';
+import { ValidationError, ValidationDetail } from '@/shared/errors';
 
 /**
  * Validation schema configuration

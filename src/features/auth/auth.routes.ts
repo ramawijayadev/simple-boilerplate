@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { validate } from '../../shared/middlewares/validation.middleware';
+import { validate } from '@/shared/middlewares/validation.middleware';
 import {
   registerSchema,
   loginSchema,
@@ -20,8 +20,9 @@ import {
   verifyEmail,
   forgotPassword,
   resetPassword,
+  me,
 } from './auth.controller';
-import { authenticate } from '../../shared/middlewares/auth.middleware';
+import { authenticate } from '@/shared/middlewares/auth.middleware';
 
 
 const router = Router();
@@ -42,5 +43,6 @@ router.post('/reset-password', validate(resetPasswordSchema), resetPassword);
 // ============================================
 
 router.post('/logout', authenticate, logout);
+router.get('/me', authenticate, me);
 
 export default router;

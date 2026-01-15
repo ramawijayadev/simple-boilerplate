@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NotFoundError } from '../../../shared/errors';
+import { NotFoundError } from '@/shared/errors';
 import type { Example } from '../example.types';
 
 // Mock the repository

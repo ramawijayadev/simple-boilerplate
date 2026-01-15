@@ -9,7 +9,7 @@
  */
 
 import pino from 'pino';
-import { config, isDevelopment, isProduction } from '../../config';
+import { config, isDevelopment, isProduction } from '@/config';
 import fs from 'fs';
 import path from 'path';
 
