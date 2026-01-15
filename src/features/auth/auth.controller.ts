@@ -17,7 +17,6 @@ import {
 } from './auth.service';
 import { UserSessionPayload } from './auth.types';
 
-
 /**
  * Handle user registration requests.
  */
@@ -87,8 +86,8 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
 export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {
-       res.status(200).json({ success: true, message: 'Logged out successfully' });
-       return;
+      res.status(200).json({ success: true, message: 'Logged out successfully' });
+      return;
     }
 
     const userSession = req.user as unknown as UserSessionPayload;
@@ -127,7 +126,6 @@ export async function me(req: Request, res: Response, next: NextFunction): Promi
   }
 }
 
-
 /**
  * Verify a user's email address.
  */
@@ -148,7 +146,11 @@ export async function verifyEmail(req: Request, res: Response, next: NextFunctio
 /**
  * Send a password reset link to the user.
  */
-export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function forgotPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     await forgotPasswordService(req.body);
 
@@ -165,7 +167,11 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
 /**
  * Reset the user's password.
  */
-export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function resetPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     await resetPasswordService(req.body);
 

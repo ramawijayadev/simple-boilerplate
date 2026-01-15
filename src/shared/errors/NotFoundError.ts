@@ -17,7 +17,11 @@ export class NotFoundError extends AppError {
    */
   public readonly resourceId?: string | number;
 
-  constructor(message: string = 'Resource not found', resource?: string, resourceId?: string | number) {
+  constructor(
+    message: string = 'Resource not found',
+    resource?: string,
+    resourceId?: string | number
+  ) {
     super(message, 404, 'NOT_FOUND');
     this.resource = resource;
     this.resourceId = resourceId;

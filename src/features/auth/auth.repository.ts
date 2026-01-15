@@ -1,4 +1,3 @@
-
 import { prisma } from '@/shared/utils/prisma';
 import type { User, UserSession, EmailVerificationToken, PasswordResetToken } from '@prisma/client';
 import { RegisterInput } from './auth.types';
@@ -92,7 +91,7 @@ export async function createSession(data: {
 
 /**
  * Find a valid session by its refresh token hash.
- * 
+ *
  * Ensures the session is not revoked or deleted.
  */
 export async function findSessionByHash(refreshTokenHash: string): Promise<UserSession | null> {
@@ -190,7 +189,7 @@ export async function markPasswordResetTokenUsed(id: number): Promise<PasswordRe
 
 /**
  * Reset a user's password transactionally.
- * 
+ *
  * Updates the password, invalidates the reset token, and revokes all active sessions.
  */
 export async function resetPassword(
@@ -229,7 +228,9 @@ export async function resetPassword(
 /**
  * Find an email verification token by hash.
  */
-export async function findEmailVerificationToken(tokenHash: string): Promise<EmailVerificationToken | null> {
+export async function findEmailVerificationToken(
+  tokenHash: string
+): Promise<EmailVerificationToken | null> {
   return prisma.emailVerificationToken.findUnique({
     where: { tokenHash },
   });
@@ -237,7 +238,7 @@ export async function findEmailVerificationToken(tokenHash: string): Promise<Ema
 
 /**
  * Verify a user's email transactionally.
- * 
+ *
  * Updates the user's verified status and marks the token as used.
  */
 export async function verifyEmail(userId: number, tokenId: number): Promise<void> {

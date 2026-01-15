@@ -116,13 +116,12 @@ if (isDevelopment && config.log.dir) {
       ],
     },
   });
-} 
-/**
- * Production Logger
- * - JSON to stdout
- * - JSON to files (combined.log, error.log)
- */
-else if (isProduction && config.log.dir) {
+} else if (isProduction && config.log.dir) {
+  /**
+   * Production Logger
+   * - JSON to stdout
+   * - JSON to files (combined.log, error.log)
+   */
   const logDir = path.resolve(config.log.dir);
 
   const streams: pino.StreamEntry[] = [

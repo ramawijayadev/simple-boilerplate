@@ -24,7 +24,7 @@ import {
   RefreshTokenInput,
   VerifyEmailInput,
   ForgotPasswordInput,
-  ResetPasswordInput
+  ResetPasswordInput,
 } from './auth.types';
 import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '@/shared/errors';
 
@@ -61,7 +61,7 @@ function generateRefreshToken(): string {
 export async function register(input: RegisterInput): Promise<{ message: string }> {
   // Check for existing user registration...
   const existingUser = await authRepository.findUserByEmail(input.email);
-  
+
   if (existingUser) {
     throw new ValidationError('Email already registered');
   }
@@ -78,7 +78,7 @@ export async function register(input: RegisterInput): Promise<{ message: string 
 
   // Dispatch verification email...
   const verifyUrl = `http://localhost:3000/verify-email?token=${verificationToken}`;
-  
+
   await sendEmail(
     input.email,
     'Verify your email',
@@ -165,7 +165,7 @@ export async function login(input: LoginInput): Promise<AuthTokens> {
  */
 export async function refresh(input: RefreshTokenInput): Promise<AuthTokens> {
   const refreshTokenHash = await hashToken(input.refreshToken);
-  
+
   const session = await authRepository.findSessionByHash(refreshTokenHash);
 
   if (!session) {
@@ -179,7 +179,7 @@ export async function refresh(input: RefreshTokenInput): Promise<AuthTokens> {
   if (session.revokedAt || session.deletedAt) {
     throw new UnauthorizedError('Session revoked');
   }
-  
+
   // Rotate the session token (Security Best Practice)...
   const newRefreshToken = generateRefreshToken();
   const newRefreshTokenHash = await hashToken(newRefreshToken);
@@ -263,7 +263,7 @@ export async function getProfile(userId: number) {
  */
 export async function forgotPassword(input: ForgotPasswordInput): Promise<void> {
   const user = await authRepository.findUserByEmail(input.email);
-  
+
   if (!user) return; // Fail silently to prevent enumeration
 
   const token = generateRandomToken();
@@ -277,7 +277,7 @@ export async function forgotPassword(input: ForgotPasswordInput): Promise<void> 
   });
 
   const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
-  
+
   await sendEmail(
     user.email,
     'Reset your password',
@@ -293,7 +293,7 @@ export async function forgotPassword(input: ForgotPasswordInput): Promise<void> 
  */
 export async function resetPassword(input: ResetPasswordInput): Promise<void> {
   const tokenHash = await hashToken(input.token);
-  
+
   const tokenRecord = await authRepository.findPasswordResetToken(tokenHash);
 
   if (!tokenRecord) {
@@ -307,6 +307,10 @@ export async function resetPassword(input: ResetPasswordInput): Promise<void> {
   const hashedPassword = await hashPassword(input.password);
 
   await authRepository.resetPassword(tokenRecord.user.id, tokenRecord.id, hashedPassword);
-  
-  await sendEmail(tokenRecord.user.email, 'Password Changed', 'Your password has been successfully changed.');
+
+  await sendEmail(
+    tokenRecord.user.email,
+    'Password Changed',
+    'Your password has been successfully changed.'
+  );
 }

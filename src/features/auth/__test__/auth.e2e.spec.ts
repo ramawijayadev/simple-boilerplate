@@ -47,21 +47,23 @@ interface HttpError extends Error {
   statusCode?: number;
 }
 
-app.use((
-  err: HttpError, 
-  req: Request, 
-  res: Response, 
-   
-  _next: NextFunction
-) => {
-  const status = err.statusCode || 500;
-  res.status(status).json({
-    success: false,
-    error: {
-      message: err.message || 'Internal Server Error'
-    }
-  });
-});
+app.use(
+  (
+    err: HttpError,
+    req: Request,
+    res: Response,
+
+    _next: NextFunction
+  ) => {
+    const status = err.statusCode || 500;
+    res.status(status).json({
+      success: false,
+      error: {
+        message: err.message || 'Internal Server Error',
+      },
+    });
+  }
+);
 
 /**
  * Helper: SHA256 Hash
@@ -73,7 +75,7 @@ function hashToken(token: string) {
 describe('Auth Feature E2E', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Clean Database
     await prisma.userSession.deleteMany();
     await prisma.emailVerificationToken.deleteMany();
@@ -99,7 +101,7 @@ describe('Auth Feature E2E', () => {
       const user = await prisma.user.findUnique({ where: { email: 'new@example.com' } });
       expect(user).not.toBeNull();
       expect(user?.emailVerifiedAt).toBeNull();
-      
+
       // Verify Password Hashed
       const validPass = await argon2.verify(user!.password!, 'SecurePassword123!');
       expect(validPass).toBe(true);
@@ -110,10 +112,12 @@ describe('Auth Feature E2E', () => {
 
       // Verify Email Sent
       expect(sendMailMock).toHaveBeenCalledTimes(1);
-      expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({
-        to: 'new@example.com',
-        subject: 'Verify your email'
-      }));
+      expect(sendMailMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'new@example.com',
+          subject: 'Verify your email',
+        })
+      );
 
       vi.stubEnv('NODE_ENV', 'test');
     });
@@ -143,7 +147,7 @@ describe('Auth Feature E2E', () => {
           name: 'Existing',
           email: 'exists@example.com',
           password: 'hash',
-        }
+        },
       });
 
       const res = await request(app).post('/auth/register').send({
@@ -161,14 +165,14 @@ describe('Auth Feature E2E', () => {
     it('should login successfully and return valid tokens', async () => {
       const password = 'Password123!';
       const hash = await argon2.hash(password);
-      
+
       const user = await prisma.user.create({
         data: {
           name: 'Login User',
           email: 'login@example.com',
           password: hash,
           isActive: true,
-        }
+        },
       });
 
       const res = await request(app).post('/auth/login').send({
@@ -188,7 +192,7 @@ describe('Auth Feature E2E', () => {
       // Verify Session in DB
       const session = await prisma.userSession.findFirst({ where: { userId: user.id } });
       expect(session).not.toBeNull();
-      
+
       // Verify Refresh Token Hash
       const hashedGivenToken = hashToken(res.body.data.refreshToken);
       expect(session!.refreshTokenHash).toBe(hashedGivenToken);
@@ -197,14 +201,14 @@ describe('Auth Feature E2E', () => {
     it('should fail with wrong password and increment failed attempts', async () => {
       const password = 'Password123!';
       const hash = await argon2.hash(password);
-      
+
       const user = await prisma.user.create({
         data: {
           name: 'Fail User',
           email: 'fail@example.com',
           password: hash,
           failedLoginAttempts: 0,
-        }
+        },
       });
 
       const res = await request(app).post('/auth/login').send({
@@ -222,15 +226,15 @@ describe('Auth Feature E2E', () => {
     it('should lock account after max attempts', async () => {
       const password = 'Password123!';
       const hash = await argon2.hash(password);
-      
+
       // Seed: Start with 4 attempts (Max 5)
       await prisma.user.create({
         data: {
           name: 'Lock User',
           email: 'lock@example.com',
           password: hash,
-          failedLoginAttempts: 4, 
-        }
+          failedLoginAttempts: 4,
+        },
       });
 
       // 5th attempt (Fail)
@@ -250,13 +254,13 @@ describe('Auth Feature E2E', () => {
     });
 
     it('should deny login if account is inactive', async () => {
-       await prisma.user.create({
+      await prisma.user.create({
         data: {
           name: 'Inactive',
           email: 'inactive@example.com',
           password: 'hash',
           isActive: false,
-        }
+        },
       });
 
       const res = await request(app).post('/auth/login').send({
@@ -272,23 +276,23 @@ describe('Auth Feature E2E', () => {
   describe('Refresh Token', () => {
     it('should rotate refresh token successfully', async () => {
       const user = await prisma.user.create({
-        data: { email: 'refresh@example.com', name: 'Ref', password: 'hash' }
+        data: { email: 'refresh@example.com', name: 'Ref', password: 'hash' },
       });
 
       // Seed Session
       const oldRefreshToken = 'old-refresh-token';
       const oldHash = hashToken(oldRefreshToken);
-      
+
       const session = await prisma.userSession.create({
         data: {
           userId: user.id,
           refreshTokenHash: oldHash,
           expiresAt: addDays(new Date(), 7),
-        }
+        },
       });
 
       const res = await request(app).post('/auth/refresh').send({
-        refreshToken: oldRefreshToken
+        refreshToken: oldRefreshToken,
       });
 
       expect(res.status).toBe(200);
@@ -300,62 +304,62 @@ describe('Auth Feature E2E', () => {
 
       // Verify NEW session created
       const newHash = hashToken(res.body.data.refreshToken);
-      const newSession = await prisma.userSession.findFirst({ 
-        where: { 
-          userId: user.id, 
+      const newSession = await prisma.userSession.findFirst({
+        where: {
+          userId: user.id,
           revokedAt: null,
-          id: { not: session.id }
-        } 
+          id: { not: session.id },
+        },
       });
-      
+
       expect(newSession).not.toBeNull();
       expect(newSession!.refreshTokenHash).toBe(newHash);
     });
 
     it('should reject reused or invalid token', async () => {
       const res = await request(app).post('/auth/refresh').send({
-        refreshToken: 'non-existent-token'
+        refreshToken: 'non-existent-token',
       });
       expect(res.status).toBe(401);
     });
 
-     it('should reject expired session', async () => {
-       const user = await prisma.user.create({
-        data: { email: 'expired@example.com', name: 'Exp', password: 'hash' }
+    it('should reject expired session', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'expired@example.com', name: 'Exp', password: 'hash' },
       });
-      
+
       const expiredToken = 'expired-token';
       const hash = hashToken(expiredToken);
-      
+
       await prisma.userSession.create({
         data: {
           userId: user.id,
           refreshTokenHash: hash,
           expiresAt: subMinutes(new Date(), 1), // Expired
-        }
+        },
       });
 
       const res = await request(app).post('/auth/refresh').send({
-        refreshToken: expiredToken
+        refreshToken: expiredToken,
       });
-      
+
       expect(res.status).toBe(401);
       expect(res.body.error.message).toMatch(/expired/i);
-     });
+    });
   });
 
   describe('Logout', () => {
     it('should revoke session', async () => {
       const user = await prisma.user.create({
-        data: { email: 'logout@example.com', name: 'Logout', password: 'hash' }
+        data: { email: 'logout@example.com', name: 'Logout', password: 'hash' },
       });
-      
+
       const session = await prisma.userSession.create({
         data: {
           userId: user.id,
           refreshTokenHash: 'hash',
           expiresAt: addDays(new Date(), 1),
-        }
+        },
       });
 
       // Spoof Access Token for Middleware
@@ -377,99 +381,105 @@ describe('Auth Feature E2E', () => {
   });
 
   describe('Email Verification', () => {
-     it('should verify email with valid token', async () => {
-        const user = await prisma.user.create({
-          data: { email: 'verify@example.com', name: 'V', password: 'hash' }
-        });
-        
-        const token = 'valid-token';
-        const hash = hashToken(token);
-        
-        await prisma.emailVerificationToken.create({
-          data: {
-             userId: user.id,
-             tokenHash: hash,
-             expiresAt: addMinutes(new Date(), 60),
-          }
-        });
+    it('should verify email with valid token', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'verify@example.com', name: 'V', password: 'hash' },
+      });
 
-        const res = await request(app).post('/auth/verify-email').send({
-          token: token
-        });
+      const token = 'valid-token';
+      const hash = hashToken(token);
 
-        expect(res.status).toBe(200);
+      await prisma.emailVerificationToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hash,
+          expiresAt: addMinutes(new Date(), 60),
+        },
+      });
 
-        // Verify Status Updated
-        const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
-        expect(updatedUser!.emailVerifiedAt).not.toBeNull();
-        
-        // Verify Token Marked Used
-        const updatedToken = await prisma.emailVerificationToken.findFirst({ where: { userId: user.id } });
-        expect(updatedToken!.usedAt).not.toBeNull();
-     });
+      const res = await request(app).post('/auth/verify-email').send({
+        token: token,
+      });
+
+      expect(res.status).toBe(200);
+
+      // Verify Status Updated
+      const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
+      expect(updatedUser!.emailVerifiedAt).not.toBeNull();
+
+      // Verify Token Marked Used
+      const updatedToken = await prisma.emailVerificationToken.findFirst({
+        where: { userId: user.id },
+      });
+      expect(updatedToken!.usedAt).not.toBeNull();
+    });
   });
 
   describe('Password Reset', () => {
-     it('should successfully send reset email (Forgot Password)', async () => {
-        vi.stubEnv('NODE_ENV', 'development');
-        
-        await prisma.user.create({
-          data: { email: 'forgot@example.com', name: 'Forgot', password: 'hash' }
-        });
+    it('should successfully send reset email (Forgot Password)', async () => {
+      vi.stubEnv('NODE_ENV', 'development');
 
-        const res = await request(app).post('/auth/forgot-password').send({
-          email: 'forgot@example.com'
-        });
+      await prisma.user.create({
+        data: { email: 'forgot@example.com', name: 'Forgot', password: 'hash' },
+      });
 
-        expect(res.status).toBe(200);
-        
-        // Verify Token created
-        const token = await prisma.passwordResetToken.findFirst({ 
-          where: { user: { email: 'forgot@example.com' } } 
-        });
-        expect(token).toBeTruthy();
-        
-        // Verify Email Sent
-        expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({
+      const res = await request(app).post('/auth/forgot-password').send({
+        email: 'forgot@example.com',
+      });
+
+      expect(res.status).toBe(200);
+
+      // Verify Token created
+      const token = await prisma.passwordResetToken.findFirst({
+        where: { user: { email: 'forgot@example.com' } },
+      });
+      expect(token).toBeTruthy();
+
+      // Verify Email Sent
+      expect(sendMailMock).toHaveBeenCalledWith(
+        expect.objectContaining({
           to: 'forgot@example.com',
-          subject: 'Reset your password'
-        }));
-        
-        vi.stubEnv('NODE_ENV', 'test');
-     });
+          subject: 'Reset your password',
+        })
+      );
 
-     it('should reset password with valid token', async () => {
-       const user = await prisma.user.create({
-          data: { email: 'reset@example.com', name: 'Reset', password: 'oldhash' }
-       });
-       
-       const token = 'reset-token';
-       const hash = hashToken(token);
-       
-       const tokenRecord = await prisma.passwordResetToken.create({
-         data: {
-           userId: user.id,
-           tokenHash: hash,
-           expiresAt: addMinutes(new Date(), 60),
-         }
-       });
+      vi.stubEnv('NODE_ENV', 'test');
+    });
 
-       const res = await request(app).post('/auth/reset-password').send({
-         token: token,
-         password: 'NewSecurePassword123!'
-       });
+    it('should reset password with valid token', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'reset@example.com', name: 'Reset', password: 'oldhash' },
+      });
 
-       expect(res.status).toBe(200);
+      const token = 'reset-token';
+      const hash = hashToken(token);
 
-       // Verify Password Changed
-       const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
-       expect(updatedUser!.password).not.toBe('oldhash');
-       const match = await argon2.verify(updatedUser!.password!, 'NewSecurePassword123!');
-       expect(match).toBe(true);
-       
-       // Verify Token Used
-       const updatedToken = await prisma.passwordResetToken.findUnique({ where: { id: tokenRecord.id } });
-       expect(updatedToken!.usedAt).not.toBeNull();
-     });
+      const tokenRecord = await prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hash,
+          expiresAt: addMinutes(new Date(), 60),
+        },
+      });
+
+      const res = await request(app).post('/auth/reset-password').send({
+        token: token,
+        password: 'NewSecurePassword123!',
+      });
+
+      expect(res.status).toBe(200);
+
+      // Verify Password Changed
+      const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
+      expect(updatedUser!.password).not.toBe('oldhash');
+      const match = await argon2.verify(updatedUser!.password!, 'NewSecurePassword123!');
+      expect(match).toBe(true);
+
+      // Verify Token Used
+      const updatedToken = await prisma.passwordResetToken.findUnique({
+        where: { id: tokenRecord.id },
+      });
+      expect(updatedToken!.usedAt).not.toBeNull();
+    });
   });
 });

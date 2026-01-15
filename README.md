@@ -22,28 +22,28 @@ pnpm dev
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment mode | `development` |
-| `PORT` | Server port | `3000` |
-| `CORS_ORIGIN` | Allowed CORS origin(s) | `http://localhost:3000` |
-| `RATE_LIMIT_WINDOW_MS` | Rate limit window (ms) | `900000` (15 min) |
-| `RATE_LIMIT_MAX_REQUESTS` | Max requests per window | `100` |
-| `LOG_LEVEL` | Logging level | `debug` (dev) / `info` (prod) |
-| `LOG_DIR` | Log files directory | `logs` |
-| `REQUEST_BODY_LIMIT` | Max request body size | `10mb` |
-| `REQUEST_TIMEOUT_MS` | Request timeout (ms) | `30000` |
+| Variable                  | Description             | Default                       |
+| ------------------------- | ----------------------- | ----------------------------- |
+| `NODE_ENV`                | Environment mode        | `development`                 |
+| `PORT`                    | Server port             | `3000`                        |
+| `CORS_ORIGIN`             | Allowed CORS origin(s)  | `http://localhost:3000`       |
+| `RATE_LIMIT_WINDOW_MS`    | Rate limit window (ms)  | `900000` (15 min)             |
+| `RATE_LIMIT_MAX_REQUESTS` | Max requests per window | `100`                         |
+| `LOG_LEVEL`               | Logging level           | `debug` (dev) / `info` (prod) |
+| `LOG_DIR`                 | Log files directory     | `logs`                        |
+| `REQUEST_BODY_LIMIT`      | Max request body size   | `10mb`                        |
+| `REQUEST_TIMEOUT_MS`      | Request timeout (ms)    | `30000`                       |
 
 ## Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start with hot-reload |
-| `pnpm build` | Compile TypeScript |
-| `pnpm start` | Run production build |
-| `pnpm lint` | Check linting |
-| `pnpm lint:fix` | Fix linting issues |
-| `pnpm format` | Format with Prettier |
+| Script          | Description           |
+| --------------- | --------------------- |
+| `pnpm dev`      | Start with hot-reload |
+| `pnpm build`    | Compile TypeScript    |
+| `pnpm start`    | Run production build  |
+| `pnpm lint`     | Check linting         |
+| `pnpm lint:fix` | Fix linting issues    |
+| `pnpm format`   | Format with Prettier  |
 
 ## API Endpoints
 
@@ -96,13 +96,14 @@ Standardized error response format:
     "code": "NOT_FOUND",
     "message": "Resource not found",
     "details": {},
-    "stack": "..." 
+    "stack": "..."
   },
   "requestId": "uuid"
 }
 ```
 
 **Available error classes:**
+
 - `BadRequestError` (400)
 - `ValidationError` (400) - with field details
 - `UnauthorizedError` (401)
@@ -133,12 +134,12 @@ The project uses Prisma ORM with PostgreSQL.
 
 ### Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:migrate` | Apply migrations |
-| `pnpm db:seed` | Seed database with sample data |
-| `pnpm db:studio` | Open Prisma Studio GUI |
+| Script             | Description                    |
+| ------------------ | ------------------------------ |
+| `pnpm db:generate` | Generate Prisma client         |
+| `pnpm db:migrate`  | Apply migrations               |
+| `pnpm db:seed`     | Seed database with sample data |
+| `pnpm db:studio`   | Open Prisma Studio GUI         |
 
 ## Logging (Pino)
 

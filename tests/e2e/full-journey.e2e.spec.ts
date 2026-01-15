@@ -10,7 +10,6 @@ import authRoutes from '@/features/auth/auth.routes';
 
 // Shared
 import { prisma } from '@/shared/utils/prisma';
-import { errorHandler } from '@/shared/middlewares/error.middleware';
 
 // Mocks
 const { sendMailMock } = vi.hoisted(() => {
@@ -63,26 +62,28 @@ app.use('/examples', exampleRoutes);
 interface HttpError extends Error {
   statusCode?: number;
 }
-app.use((
-  err: HttpError, 
-  req: Request, 
-  res: Response, 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _next: NextFunction
-) => {
-  const status = err.statusCode || 500;
-  res.status(status).json({
-    success: false,
-    error: {
-      message: err.message || 'Internal Server Error'
-    }
-  });
-});
+app.use(
+  (
+    err: HttpError,
+    req: Request,
+    res: Response,
+
+    _next: NextFunction
+  ) => {
+    const status = err.statusCode || 500;
+    res.status(status).json({
+      success: false,
+      error: {
+        message: err.message || 'Internal Server Error',
+      },
+    });
+  }
+);
 
 describe('Full User Journey E2E', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Clean Database
     await prisma.example.deleteMany();
     await prisma.userSession.deleteMany();
@@ -112,9 +113,7 @@ describe('Full User Journey E2E', () => {
     expect(accessToken).toBeDefined();
 
     // 3. Get Profile (Me)
-    const meRes = await request(app)
-      .get('/auth/me')
-      .set('Authorization', `Bearer ${accessToken}`);
+    const meRes = await request(app).get('/auth/me').set('Authorization', `Bearer ${accessToken}`);
     expect(meRes.status).toBe(200);
     expect(meRes.body.data.email).toBe('journey@example.com');
     expect(meRes.body.data.name).toBe('Journey User');
@@ -140,9 +139,9 @@ describe('Full User Journey E2E', () => {
 
     // 6. Update Example
     const updateExRes = await request(app)
-        .put(`/examples/${exampleId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({ name: 'Updated Example' });
+      .put(`/examples/${exampleId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ name: 'Updated Example' });
     expect(updateExRes.status).toBe(200);
 
     // 7. Logout
@@ -157,7 +156,7 @@ describe('Full User Journey E2E', () => {
     // `const payload = jwt.verify(...)`
     // It DOES NOT check DB for session status by default in `auth.middleware.ts` (it just verifies signature).
     // UNLESS `auth.middleware.ts` was updated to check DB?
-    // Let's check `auth.middleware.ts` again. 
+    // Let's check `auth.middleware.ts` again.
     // It only does `jwt.verify`. So creating a new session won't invalidate the old Access Token immediately until it expires (15 mins).
     // However, Logout revokes the Refresh token session in DB.
     // If we want strict logout, we need a blacklist or DB check.
@@ -173,11 +172,11 @@ describe('Full User Journey E2E', () => {
     // I should clarify this behavior or skip that step, OR if the user expects immediate logout, I need to implement a blacklist or DB check in middleware.
     // Given the boilerplate simplicity, I assume standard JWT.
     // I will verify that `refresh` fails.
-    
+
     // 8a. Verify Refresh Token is dead
     const refreshToken = loginRes.body.data.refreshToken;
     const refreshRes = await request(app).post('/auth/refresh').send({
-        refreshToken: refreshToken
+      refreshToken: refreshToken,
     });
     expect(refreshRes.status).toBe(401); // "Session revoked" or similar
 

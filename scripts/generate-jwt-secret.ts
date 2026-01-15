@@ -1,9 +1,9 @@
 /**
  * JWT Secret Generator
- * 
+ *
  * Generates a cryptographically secure 64-byte random hex string
  * and updates the locally configured .env file.
- * 
+ *
  * Usage: npm run secrets:generate
  */
 
@@ -24,10 +24,10 @@ function main() {
 
   // 1. Generate Entropy
   const secret = crypto.randomBytes(SECRET_LENGTH_BYTES).toString('hex');
-  
+
   const envPath = path.join(process.cwd(), ENV_FILE);
   const exampleEnvPath = path.join(process.cwd(), EXAMPLE_ENV_FILE);
-  
+
   let envContent = '';
 
   // 2. Resolve Environment File
@@ -51,7 +51,9 @@ function main() {
   fs.writeFileSync(envPath, envContent, 'utf-8');
 
   console.log('✅  JWT_SECRET updated successfully.');
-  console.log(`🔒  Secret Preview: ${secret.substring(0, 5)}...${secret.substring(secret.length - 5)}`);
+  console.log(
+    `🔒  Secret Preview: ${secret.substring(0, 5)}...${secret.substring(secret.length - 5)}`
+  );
 }
 
 main();

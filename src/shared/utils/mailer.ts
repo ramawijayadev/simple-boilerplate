@@ -11,7 +11,7 @@ const mailTransporter = nodemailer.createTransport({
 
 export async function sendEmail(to: string, subject: string, text: string): Promise<void> {
   if (process.env.NODE_ENV === 'test') return; // Skip in tests
-  
+
   try {
     await mailTransporter.sendMail({
       from: '"No Reply" <noreply@example.com>',

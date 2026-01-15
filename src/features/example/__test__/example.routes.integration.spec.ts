@@ -18,19 +18,18 @@ vi.mock('@/shared/middlewares/auth.middleware', () => ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (req as any).user = { userId: 1, role: 'user' };
     next();
-  }
+  },
 }));
 
 const app = express();
 app.use(express.json());
 
-
 // Mock Logger Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  (req as Request & { log: Partial<Logger> }).log = { 
-    info: vi.fn(), 
-    warn: vi.fn(), 
-    error: vi.fn() 
+  (req as Request & { log: Partial<Logger> }).log = {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   };
   next();
 });
@@ -87,7 +86,7 @@ describe('Example Feature Integration (Route/Controller)', () => {
 
       const res = await request(app).post('/examples').send({
         name: 'New Example',
-        description: 'Desc'
+        description: 'Desc',
       });
 
       expect(res.status).toBe(201);

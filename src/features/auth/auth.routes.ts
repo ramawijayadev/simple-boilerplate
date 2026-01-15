@@ -24,7 +24,6 @@ import {
 } from './auth.controller';
 import { authenticate } from '@/shared/middlewares/auth.middleware';
 
-
 const router = Router();
 
 // ============================================

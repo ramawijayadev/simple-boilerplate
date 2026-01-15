@@ -36,10 +36,7 @@ export async function findById(id: ExampleId): Promise<Example | null> {
 /**
  * Create new example
  */
-export async function create(
-  data: CreateExampleInput,
-  createdBy?: string
-): Promise<Example> {
+export async function create(data: CreateExampleInput, createdBy?: string): Promise<Example> {
   return prisma.example.create({
     data: {
       name: data.name,

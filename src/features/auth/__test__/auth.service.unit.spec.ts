@@ -38,11 +38,11 @@ describe('AuthService', () => {
         password: 'password123',
       });
 
-      expect(result).toEqual({ 
-        message: 'Registration successful. Please check your email to verify your account.' 
+      expect(result).toEqual({
+        message: 'Registration successful. Please check your email to verify your account.',
       });
       expect(authRepository.createUser).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Test' }), 
+        expect.objectContaining({ name: 'Test' }),
         expect.any(String), // hashed password
         expect.any(String), // hashed token
         expect.any(Date)
@@ -88,11 +88,14 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
       expect(authRepository.createSession).toHaveBeenCalled();
-      expect(authRepository.updateUserLoginStats).toHaveBeenCalledWith(1, expect.objectContaining({ failedLoginAttempts: 0 }));
+      expect(authRepository.updateUserLoginStats).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ failedLoginAttempts: 0 })
+      );
     });
 
     it('should throw UnauthorizedError on wrong password and increment failures', async () => {
-       const mockUser = {
+      const mockUser = {
         id: 1,
         email: 'test@example.com',
         password: '$argon2id$v=19$m=65536,t=3,p=4$somehash...$somehash', // Dummy hash
@@ -101,7 +104,7 @@ describe('AuthService', () => {
       };
 
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(mockUser as User);
-      
+
       await expect(
         authService.login({
           email: 'test@example.com',
@@ -110,7 +113,7 @@ describe('AuthService', () => {
       ).rejects.toThrow(UnauthorizedError);
 
       expect(authRepository.updateUserLoginStats).toHaveBeenCalledWith(
-        1, 
+        1,
         expect.objectContaining({ failedLoginAttempts: 1 })
       );
     });

@@ -10,7 +10,6 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 declare global {
-   
   var prisma: PrismaClient | undefined;
 }
 
