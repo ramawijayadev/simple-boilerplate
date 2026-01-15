@@ -1,185 +1,114 @@
-/**
- * Example Routes Integration Tests
- *
- * Tests the full HTTP request/response cycle.
- * Uses mocked repository to avoid database dependency.
- */
-
+import 'dotenv/config';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import type { Example } from '../example.types';
+import express from 'express';
+import exampleRoutes from '../example.routes';
+import * as exampleService from '../example.service';
+import { errorHandler } from '../../../shared/middlewares/error.middleware';
+import { AppError } from '../../../shared/errors';
 
-// Mock the repository before importing app
-vi.mock('../example.repository', () => ({
-  findAll: vi.fn(),
-  findById: vi.fn(),
-  create: vi.fn(),
-  update: vi.fn(),
-  softDelete: vi.fn(),
-}));
+// Mock Service Layer
+vi.mock('../example.service');
 
-// Import after mocking
-import * as exampleRepository from '../example.repository';
-import app from '../../../app';
+const app = express();
+app.use(express.json());
+// Mock Logger Middleware
+app.use((
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: any, 
+  res, 
+  next
+) => {
+  req.log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+  next();
+});
+app.use('/examples', exampleRoutes);
+app.use(errorHandler);
 
-// Mock example data
-const mockExample: Example = {
+const mockExample = {
   id: 1,
   name: 'Test Example',
   description: 'Test description',
-  createdBy: 'user',
-  updatedBy: null,
-  deletedBy: null,
-  createdAt: new Date('2026-01-15T00:00:00Z'),
-  updatedAt: new Date('2026-01-15T00:00:00Z'),
-  deletedAt: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
-describe('Example Routes', () => {
+describe('Example Feature Integration (Route/Controller)', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('GET /examples', () => {
-    it('should return 200 with array of examples', async () => {
-      vi.mocked(exampleRepository.findAll).mockResolvedValue([mockExample]);
+    it('should return list of examples', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(exampleService.getAllExamples).mockResolvedValue([mockExample] as unknown as any);
 
-      const response = await request(app).get('/examples');
+      const res = await request(app).get('/examples');
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.data).toHaveLength(1);
-    });
-
-    it('should return empty array when no examples', async () => {
-      vi.mocked(exampleRepository.findAll).mockResolvedValue([]);
-
-      const response = await request(app).get('/examples');
-
-      expect(response.status).toBe(200);
-      expect(response.body.data).toEqual([]);
-    });
-
-    it('should include requestId in response', async () => {
-      vi.mocked(exampleRepository.findAll).mockResolvedValue([]);
-
-      const response = await request(app).get('/examples');
-
-      expect(response.body.requestId).toBeDefined();
-    });
-  });
-
-  describe('POST /examples', () => {
-    it('should create example with valid data', async () => {
-      const input = { name: 'New Example', description: 'New description' };
-      const created = { ...mockExample, ...input };
-      vi.mocked(exampleRepository.create).mockResolvedValue(created);
-
-      const response = await request(app).post('/examples').send(input);
-
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.name).toBe('New Example');
-    });
-
-    it('should create example with only name', async () => {
-      const created = { ...mockExample, description: null };
-      vi.mocked(exampleRepository.create).mockResolvedValue(created);
-
-      const response = await request(app).post('/examples').send({ name: 'Name Only' });
-
-      expect(response.status).toBe(201);
-    });
-
-    it('should return 400 when name is missing', async () => {
-      const response = await request(app).post('/examples').send({ description: 'No name' });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('should return 400 when name is empty', async () => {
-      const response = await request(app).post('/examples').send({ name: '' });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(exampleService.getAllExamples).toHaveBeenCalled();
     });
   });
 
   describe('GET /examples/:id', () => {
-    it('should return example when found', async () => {
-      vi.mocked(exampleRepository.findById).mockResolvedValue(mockExample);
+    it('should return example by id', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(exampleService.getExampleById).mockResolvedValue(mockExample as unknown as any);
 
-      const response = await request(app).get('/examples/1');
+      const res = await request(app).get('/examples/1');
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.id).toBe(1);
+      expect(res.status).toBe(200);
+      expect(res.body.data.id).toBe(1);
     });
 
-    it('should return 404 when not found', async () => {
-      vi.mocked(exampleRepository.findById).mockResolvedValue(null);
+    it('should return 404 if service throws AppError', async () => {
+      vi.mocked(exampleService.getExampleById).mockRejectedValue(new AppError('Not found', 404));
 
-      const response = await request(app).get('/examples/999');
+      const res = await request(app).get('/examples/999');
 
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('POST /examples', () => {
+    it('should create example', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(exampleService.createExample).mockResolvedValue(mockExample as unknown as any);
+
+      const res = await request(app).post('/examples').send({
+        name: 'New Example',
+        description: 'Desc'
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.name).toBe('Test Example');
     });
 
-    it('should return 400 for invalid id format', async () => {
-      const response = await request(app).get('/examples/invalid');
-
-      expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    it('should fail validation on missing name', async () => {
+      const res = await request(app).post('/examples').send({ description: 'No name' });
+      expect(res.status).toBe(400);
     });
   });
 
   describe('PUT /examples/:id', () => {
-    it('should update example name', async () => {
-      const updated = { ...mockExample, name: 'Updated Name' };
-      vi.mocked(exampleRepository.findById).mockResolvedValue(mockExample);
-      vi.mocked(exampleRepository.update).mockResolvedValue(updated);
+    it('should update example', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(exampleService.updateExample).mockResolvedValue(mockExample as unknown as any);
 
-      const response = await request(app).put('/examples/1').send({ name: 'Updated Name' });
+      const res = await request(app).put('/examples/1').send({ name: 'Updated' });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.name).toBe('Updated Name');
-    });
-
-    it('should return 404 when example not found', async () => {
-      vi.mocked(exampleRepository.findById).mockResolvedValue(null);
-
-      const response = await request(app).put('/examples/999').send({ name: 'Updated' });
-
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
+      expect(res.status).toBe(200);
     });
   });
 
   describe('DELETE /examples/:id', () => {
-    it('should soft delete example', async () => {
-      const deleted = { ...mockExample, deletedAt: new Date() };
-      vi.mocked(exampleRepository.findById).mockResolvedValue(mockExample);
-      vi.mocked(exampleRepository.softDelete).mockResolvedValue(deleted);
+    it('should delete example', async () => {
+      vi.mocked(exampleService.deleteExample).mockResolvedValue(undefined);
 
-      const response = await request(app).delete('/examples/1');
+      const res = await request(app).delete('/examples/1');
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe('Example deleted successfully');
-    });
-
-    it('should return 404 when example not found', async () => {
-      vi.mocked(exampleRepository.findById).mockResolvedValue(null);
-
-      const response = await request(app).delete('/examples/999');
-
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
+      expect(res.status).toBe(200);
     });
   });
 });

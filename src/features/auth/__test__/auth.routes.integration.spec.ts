@@ -5,7 +5,7 @@ import express from 'express';
 import authRoutes from '../auth.routes';
 import * as authService from '../auth.service';
 import { errorHandler } from '../../../shared/middlewares/error.middleware';
-import { AppError, UnauthorizedError } from '../../../shared/errors';
+import { UnauthorizedError } from '../../../shared/errors';
 
 // Mock the Service Layer to isolate Controller logic
 vi.mock('../auth.service');

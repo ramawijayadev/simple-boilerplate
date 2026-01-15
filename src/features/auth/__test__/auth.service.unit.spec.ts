@@ -29,7 +29,8 @@ describe('AuthService', () => {
   describe('register', () => {
     it('should register a new user successfully', async () => {
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(null);
-      vi.mocked(authRepository.createUser).mockResolvedValue({ id: 1 } as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(authRepository.createUser).mockResolvedValue({ id: 1 } as unknown as any);
 
       const result = await authService.register({
         name: 'Test',
@@ -49,7 +50,8 @@ describe('AuthService', () => {
     });
 
     it('should throw if email already exists', async () => {
-      vi.mocked(authRepository.findUserByEmail).mockResolvedValue({ id: 1 } as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(authRepository.findUserByEmail).mockResolvedValue({ id: 1 } as unknown as any);
 
       await expect(
         authService.register({
@@ -76,8 +78,10 @@ describe('AuthService', () => {
         lockedUntil: null,
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(mockUser as any);
-      vi.mocked(authRepository.createSession).mockResolvedValue({ id: 100 } as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(authRepository.createSession).mockResolvedValue({ id: 100 } as unknown as any);
 
       const result = await authService.login({
         email: 'test@example.com',
@@ -99,6 +103,7 @@ describe('AuthService', () => {
         failedLoginAttempts: 0,
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(mockUser as any);
       
       await expect(
@@ -121,6 +126,7 @@ describe('AuthService', () => {
         lockedUntil: new Date(Date.now() + 1000 * 60 * 10), // Locked 10 mins future
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(mockUser as any);
 
       await expect(

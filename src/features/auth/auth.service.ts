@@ -17,23 +17,16 @@ import {
 } from '../../shared/utils/crypto';
 import * as authRepository from './auth.repository';
 import {
-  RegisterInput,
-  LoginInput,
-  AuthTokens,
   UserSessionPayload,
-  JWTPayload,
+  AuthTokens,
+  LoginInput,
+  RegisterInput,
   RefreshTokenInput,
   VerifyEmailInput,
   ForgotPasswordInput,
-  ResetPasswordInput,
+  ResetPasswordInput
 } from './auth.types';
-import {
-  AppError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-  ForbiddenError,
-} from '../../shared/errors';
+import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '../../shared/errors';
 
 // ============================================
 // Core Logic

@@ -41,7 +41,15 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 
 // Error Handling Middleware for Tests
-app.use((err: any, req: any, res: any, next: any) => {
+import { Request, Response, NextFunction } from 'express';
+
+app.use((
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  err: any, 
+  req: Request, 
+  res: Response, 
+  _next: NextFunction
+) => {
   const status = err.statusCode || 500;
   res.status(status).json({
     success: false,

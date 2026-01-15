@@ -22,7 +22,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     const payload = jwt.verify(token, config.jwt.secret) as UserSessionPayload;
     req.user = payload;
     next();
-  } catch (error) {
-    next(new UnauthorizedError('Invalid or expired token'));
+  } catch {
+    return next(new UnauthorizedError('Invalid token'));
   }
 }
