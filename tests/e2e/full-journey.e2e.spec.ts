@@ -49,8 +49,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     fatal: vi.fn(),
     silent: vi.fn(),
     child: vi.fn(),
+    msgPrefix: '',
     level: 'info',
-  };
+  } as unknown as Logger;
   next();
 });
 
