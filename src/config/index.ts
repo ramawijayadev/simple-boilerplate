@@ -23,6 +23,22 @@ export interface AppConfig {
     bodyLimit: string;
     timeoutMs: number;
   };
+  jwt: {
+    secret: string;
+    issuer: string;
+    audience: string;
+  };
+  auth: {
+    refreshTokenExpiresDays: number;
+    emailTokenExpiresMinutes: number;
+    passwordResetTokenExpiresMinutes: number;
+    maxLoginAttempts: number;
+    lockDurationMinutes: number;
+  };
+  mail: {
+    host: string;
+    port: number;
+  };
 }
 
 /**
@@ -90,6 +106,22 @@ function buildConfig(): AppConfig {
     request: {
       bodyLimit,
       timeoutMs,
+    },
+    jwt: {
+      secret: getOptional('JWT_SECRET', 'dev_secret_do_not_use'),
+      issuer: getOptional('JWT_ISSUER', 'express-api'),
+      audience: getOptional('JWT_AUDIENCE', 'express-api-client'),
+    },
+    auth: {
+      refreshTokenExpiresDays: parseInt(getOptional('AUTH_REFRESH_TOKEN_EXPIRES_DAYS', '7'), 10),
+      emailTokenExpiresMinutes: parseInt(getOptional('AUTH_EMAIL_TOKEN_EXPIRES_MINUTES', '1440'), 10),
+      passwordResetTokenExpiresMinutes: parseInt(getOptional('AUTH_PASSWORD_RESET_TOKEN_EXPIRES_MINUTES', '60'), 10),
+      maxLoginAttempts: parseInt(getOptional('AUTH_MAX_LOGIN_ATTEMPTS', '5'), 10),
+      lockDurationMinutes: parseInt(getOptional('AUTH_LOCK_DURATION_MINUTES', '15'), 10),
+    },
+    mail: {
+      host: getOptional('MAIL_HOST', 'localhost'),
+      port: parseInt(getOptional('MAIL_PORT', '1025'), 10),
     },
   };
 }

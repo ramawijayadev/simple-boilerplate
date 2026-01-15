@@ -5,6 +5,7 @@
  */
 
 import { Logger } from 'pino';
+import { UserSessionPayload } from './auth';
 
 declare global {
   namespace Express {
@@ -18,6 +19,11 @@ declare global {
        * Pino child logger with request context (added by pino-http)
        */
       log: Logger;
+
+      /**
+       * Authenticated user session
+       */
+      user?: UserSessionPayload;
     }
   }
 }

@@ -24,6 +24,7 @@ import { errorHandler } from './shared/middlewares/error.middleware';
 
 import healthRoutes from './features/health/health.routes';
 import exampleRoutes from './features/example/example.routes';
+import authRoutes from './features/auth/auth.routes';
 
 const app: Express = express();
 
@@ -53,6 +54,7 @@ app.use(express.urlencoded({ extended: true, limit: config.request.bodyLimit }))
  */
 app.use('/health', healthRoutes);
 app.use('/examples', exampleRoutes);
+app.use('/auth', authRoutes);
 
 if (isDevelopment) {
   app.get('/error', () => {
