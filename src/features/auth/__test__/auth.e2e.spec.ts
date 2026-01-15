@@ -43,11 +43,15 @@ app.use('/auth', authRoutes);
 // Error Handling Middleware for Tests
 import { Request, Response, NextFunction } from 'express';
 
+interface HttpError extends Error {
+  statusCode?: number;
+}
+
 app.use((
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  err: any, 
+  err: HttpError, 
   req: Request, 
   res: Response, 
+   
   _next: NextFunction
 ) => {
   const status = err.statusCode || 500;

@@ -10,13 +10,22 @@ import { errorHandler } from '../../../shared/middlewares/error.middleware';
 const app = express();
 app.use(express.json());
 // Mock Logger Middleware
-app.use((
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  req: any, 
-  res, 
-  next
-) => {
-  req.log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+import { Request, Response, NextFunction } from 'express';
+import { Logger } from 'pino';
+// ...
+// Mock Logger Middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  (req as Request & { log: Partial<Logger> }).log = {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    trace: vi.fn(),
+    fatal: vi.fn(),
+    silent: vi.fn(),
+    child: vi.fn(),
+    level: 'info',
+  };
   next();
 });
 app.use('/examples', exampleRoutes);

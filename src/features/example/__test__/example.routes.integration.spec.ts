@@ -1,7 +1,9 @@
 import 'dotenv/config';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import { Example } from '@prisma/client';
+import { Logger } from 'pino';
 import exampleRoutes from '../example.routes';
 import * as exampleService from '../example.service';
 import { errorHandler } from '../../../shared/middlewares/error.middleware';
@@ -13,13 +15,12 @@ vi.mock('../example.service');
 const app = express();
 app.use(express.json());
 // Mock Logger Middleware
-app.use((
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  req: any, 
-  res, 
-  next
-) => {
-  req.log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+app.use((req: Request, res: Response, next: NextFunction) => {
+  (req as Request & { log: Partial<Logger> }).log = { 
+    info: vi.fn(), 
+    warn: vi.fn(), 
+    error: vi.fn() 
+  };
   next();
 });
 app.use('/examples', exampleRoutes);
@@ -40,8 +41,7 @@ describe('Example Feature Integration (Route/Controller)', () => {
 
   describe('GET /examples', () => {
     it('should return list of examples', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(exampleService.getAllExamples).mockResolvedValue([mockExample] as unknown as any);
+      vi.mocked(exampleService.getAllExamples).mockResolvedValue([mockExample] as Example[]);
 
       const res = await request(app).get('/examples');
 
@@ -53,8 +53,7 @@ describe('Example Feature Integration (Route/Controller)', () => {
 
   describe('GET /examples/:id', () => {
     it('should return example by id', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(exampleService.getExampleById).mockResolvedValue(mockExample as unknown as any);
+      vi.mocked(exampleService.getExampleById).mockResolvedValue(mockExample as Example);
 
       const res = await request(app).get('/examples/1');
 
@@ -73,8 +72,7 @@ describe('Example Feature Integration (Route/Controller)', () => {
 
   describe('POST /examples', () => {
     it('should create example', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(exampleService.createExample).mockResolvedValue(mockExample as unknown as any);
+      vi.mocked(exampleService.createExample).mockResolvedValue(mockExample as Example);
 
       const res = await request(app).post('/examples').send({
         name: 'New Example',
@@ -93,8 +91,7 @@ describe('Example Feature Integration (Route/Controller)', () => {
 
   describe('PUT /examples/:id', () => {
     it('should update example', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(exampleService.updateExample).mockResolvedValue(mockExample as unknown as any);
+      vi.mocked(exampleService.updateExample).mockResolvedValue(mockExample as Example);
 
       const res = await request(app).put('/examples/1').send({ name: 'Updated' });
 
