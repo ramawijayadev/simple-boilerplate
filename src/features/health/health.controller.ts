@@ -5,10 +5,6 @@
 import { Request, Response } from 'express';
 import { getHealthStatus } from '@/features/health/health.service';
 
-/**
- * GET /health
- * Returns current server health status
- */
 export function getHealth(req: Request, res: Response): void {
   req.log.info('Health check requested');
 

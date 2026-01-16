@@ -11,10 +11,6 @@ import {
   deleteExample,
 } from '@/features/example/example.service';
 
-/**
- * GET /examples
- * Get all examples
- */
 export async function index(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const page = parseInt(req.query.page as string, 10) || 1;
@@ -35,10 +31,6 @@ export async function index(req: Request, res: Response, next: NextFunction): Pr
   }
 }
 
-/**
- * GET /examples/:id
- * Get example by ID
- */
 export async function show(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = parseInt(req.params.id as string, 10);
@@ -56,10 +48,6 @@ export async function show(req: Request, res: Response, next: NextFunction): Pro
   }
 }
 
-/**
- * POST /examples
- * Create new example
- */
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     req.log.info({ body: req.body }, 'Creating new example');
@@ -76,10 +64,6 @@ export async function create(req: Request, res: Response, next: NextFunction): P
   }
 }
 
-/**
- * PUT /examples/:id
- * Update example
- */
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = parseInt(req.params.id as string, 10);
@@ -97,10 +81,6 @@ export async function update(req: Request, res: Response, next: NextFunction): P
   }
 }
 
-/**
- * DELETE /examples/:id
- * Soft delete example
- */
 export async function destroy(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = parseInt(req.params.id as string, 10);

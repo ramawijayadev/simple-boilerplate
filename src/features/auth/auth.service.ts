@@ -222,7 +222,6 @@ export async function getProfile(userId: number) {
     throw new NotFoundError('User not found');
   }
 
-  // Deselect sensitive fields if not handled by repository/ORM
   const { password: _password, ...profile } = user;
   return profile;
 }

@@ -51,9 +51,6 @@ const errorSerializer = (err: Error) => ({
 // Base pino options
 const baseOptions: pino.LoggerOptions = {
   level: config.log.level,
-  // formatters: {
-  //   level: (label) => ({ level: label.toUpperCase() }),
-  // },
   timestamp: pino.stdTimeFunctions.isoTime,
   redact: {
     paths: redactPaths,

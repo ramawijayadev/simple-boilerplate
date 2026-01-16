@@ -12,9 +12,6 @@ import type {
   ExampleId,
 } from '@/features/example/example.types';
 
-/**
- * Find all examples (excluding soft-deleted) with pagination
- */
 export async function findAll(options: { page: number; perPage: number }): Promise<{
   data: Example[];
   meta: {
@@ -62,9 +59,6 @@ export async function findAll(options: { page: number; perPage: number }): Promi
   };
 }
 
-/**
- * Find example by ID (excluding soft-deleted)
- */
 export async function findById(id: ExampleId): Promise<Example | null> {
   return prisma.example.findFirst({
     where: {
@@ -74,9 +68,6 @@ export async function findById(id: ExampleId): Promise<Example | null> {
   });
 }
 
-/**
- * Create new example
- */
 export async function create(data: CreateExampleInput, createdBy?: string): Promise<Example> {
   return prisma.example.create({
     data: {
@@ -87,9 +78,6 @@ export async function create(data: CreateExampleInput, createdBy?: string): Prom
   });
 }
 
-/**
- * Update example
- */
 export async function update(
   id: ExampleId,
   data: UpdateExampleInput,
@@ -104,9 +92,6 @@ export async function update(
   });
 }
 
-/**
- * Soft delete example
- */
 export async function softDelete(id: ExampleId, deletedBy?: string): Promise<Example> {
   return prisma.example.update({
     where: { id },
@@ -117,9 +102,6 @@ export async function softDelete(id: ExampleId, deletedBy?: string): Promise<Exa
   });
 }
 
-/**
- * Check if example exists (including soft-deleted)
- */
 export async function exists(id: ExampleId): Promise<boolean> {
   const count = await prisma.example.count({
     where: { id },

@@ -14,9 +14,6 @@ import type {
 } from '@/features/example/example.types';
 import { NotFoundError } from '@/shared/errors';
 
-/**
- * Get all examples (excluding soft-deleted) with pagination
- */
 export async function getAllExamples(options: {
   page: number;
   perPage: number;
@@ -24,9 +21,6 @@ export async function getAllExamples(options: {
   return exampleRepository.findAll(options);
 }
 
-/**
- * Get example by ID
- */
 export async function getExampleById(id: ExampleId): Promise<Example> {
   const example = await exampleRepository.findById(id);
 
@@ -37,9 +31,6 @@ export async function getExampleById(id: ExampleId): Promise<Example> {
   return example;
 }
 
-/**
- * Create new example
- */
 export async function createExample(
   input: CreateExampleInput,
   createdBy: string = 'user'
@@ -47,9 +38,6 @@ export async function createExample(
   return exampleRepository.create(input, createdBy);
 }
 
-/**
- * Update existing example
- */
 export async function updateExample(
   id: ExampleId,
   input: UpdateExampleInput,
@@ -61,9 +49,6 @@ export async function updateExample(
   return exampleRepository.update(id, input, updatedBy);
 }
 
-/**
- * Soft delete example
- */
 export async function deleteExample(id: ExampleId, deletedBy: string = 'user'): Promise<void> {
   // Check if exists
   await getExampleById(id);
