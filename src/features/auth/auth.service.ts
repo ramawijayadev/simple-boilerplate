@@ -19,7 +19,17 @@ import {
   ForgotPasswordInput,
   ResetPasswordInput,
 } from '@/features/auth/auth.types';
-import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '@/shared/errors';
+import {
+  UnauthorizedError,
+  ValidationError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+} from '@/shared/errors';
+
+// Dummy hash for timing attack mitigation
+const DUMMY_HASH =
+  '$argon2id$v=19$m=65536,t=3,p=4$eprA2z2fyrvIF8a5ZMzbSg$/XUlFrh99IiT3TZRtL/0deGSKGIxKVB7GeEvM0a81GA';
 
 function generateAccessToken(payload: UserSessionPayload): string {
   return jwt.sign(payload, config.jwt.secret, {
@@ -32,8 +42,6 @@ function generateAccessToken(payload: UserSessionPayload): string {
 function generateRefreshToken(): string {
   return generateRandomToken();
 }
-
-import { ConflictError } from '@/shared/errors';
 
 export async function register(
   input: RegisterInput
@@ -78,13 +86,34 @@ export async function register(
 export async function login(input: LoginInput): Promise<AuthTokens> {
   const user = await authRepository.findUserByEmail(input.email);
 
-  if (!user) {
+  // Timing Mitigation: Always verify password, even if user not found
+  // If user exists and has password, use it. Otherwise use dummy.
+  const targetHash = user?.password ? user.password : DUMMY_HASH;
+  const isValidPassword = await verifyPassword(input.password, targetHash);
+
+  // 1. If password invalid (or user not found which implies invalid against dummy), throw generic error
+  if (!isValidPassword || !user) {
+    if (user) {
+      // Record failed attempt if user exists (even if we don't tell them)
+      const attempts = user.failedLoginAttempts + 1;
+      let lockedUntil = null;
+
+      if (attempts >= config.auth.maxLoginAttempts) {
+        lockedUntil = addMinutes(new Date(), config.auth.lockDurationMinutes);
+      }
+
+      await authRepository.updateUserLoginStats(user.id, {
+        failedLoginAttempts: attempts,
+        lockedUntil: lockedUntil,
+      });
+    }
+
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  // Security: Prevent soft-deleted users from logging in
+  // 2. Check Account Status (Only reachable if password and user are valid)
   if (user.deletedAt) {
-    throw new ForbiddenError('Account is disabled');
+    throw new UnauthorizedError('Invalid credentials'); // Mask deleted users
   }
 
   if (!user.isActive) {
@@ -95,35 +124,14 @@ export async function login(input: LoginInput): Promise<AuthTokens> {
     throw new ForbiddenError(`Account locked until ${user.lockedUntil.toISOString()}`);
   }
 
-  // Security: Handle users with no password (e.g. Oauth only) gracefully
-  if (!user.password) {
-    throw new UnauthorizedError('Invalid credentials');
-  }
-
-  const isValidPassword = await verifyPassword(input.password, user.password);
-
-  if (!isValidPassword) {
-    const attempts = user.failedLoginAttempts + 1;
-    let lockedUntil = null;
-
-    if (attempts >= config.auth.maxLoginAttempts) {
-      lockedUntil = addMinutes(new Date(), config.auth.lockDurationMinutes);
-    }
-
-    await authRepository.updateUserLoginStats(user.id, {
-      failedLoginAttempts: attempts,
-      lockedUntil: lockedUntil,
-    });
-
-    throw new UnauthorizedError('Invalid credentials');
-  }
-
+  // Reset login statistics on success...
   await authRepository.updateUserLoginStats(user.id, {
     failedLoginAttempts: 0,
     lockedUntil: null,
     lastLoginAt: new Date(),
   });
 
+  // Create the session and tokens...
   const refreshToken = generateRefreshToken();
   const refreshTokenHash = await hashToken(refreshToken);
   const expiresAt = addDays(new Date(), config.auth.refreshTokenExpiresDays);
@@ -223,7 +231,11 @@ export async function getProfile(userId: number) {
 export async function forgotPassword(input: ForgotPasswordInput): Promise<void> {
   const user = await authRepository.findUserByEmail(input.email);
 
-  if (!user) return; // Fail silently to prevent enumeration
+  if (!user) {
+    // Timing Mitigation: Simulate work to prevent enumeration
+    await verifyPassword('dummy', DUMMY_HASH);
+    return;
+  }
 
   const token = generateRandomToken();
   const tokenHash = await hashToken(token);

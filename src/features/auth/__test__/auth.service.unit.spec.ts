@@ -128,10 +128,15 @@ describe('AuthService', () => {
     });
 
     it('should throw ForbiddenError if account locked', async () => {
+      const password = 'password123';
+      const hash = await argon2.hash(password);
+
       const mockUser = {
         id: 1,
         isActive: true,
         lockedUntil: new Date(Date.now() + 1000 * 60 * 10), // Locked 10 mins future
+        password: hash,
+        failedLoginAttempts: 2,
       };
 
       vi.mocked(authRepository.findUserByEmail).mockResolvedValue(mockUser as User);
@@ -139,7 +144,7 @@ describe('AuthService', () => {
       await expect(
         authService.login({
           email: 'locked@example.com',
-          password: 'password',
+          password: password,
         })
       ).rejects.toThrow(ForbiddenError);
     });

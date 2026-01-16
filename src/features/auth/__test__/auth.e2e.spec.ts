@@ -254,18 +254,21 @@ describe('Auth Feature E2E', () => {
     });
 
     it('should deny login if account is inactive', async () => {
+      const password = 'Password123!';
+      const hash = await argon2.hash(password);
+
       await prisma.user.create({
         data: {
           name: 'Inactive',
           email: 'inactive@example.com',
-          password: 'hash',
+          password: hash,
           isActive: false,
         },
       });
 
       const res = await request(app).post('/api/v1/auth/login').send({
         email: 'inactive@example.com',
-        password: 'any',
+        password: password,
       });
 
       expect(res.status).toBe(403);
@@ -273,22 +276,26 @@ describe('Auth Feature E2E', () => {
     });
 
     it('should deny login if account is soft-deleted', async () => {
+      const password = 'Password123!';
+      const hash = await argon2.hash(password);
+
       await prisma.user.create({
         data: {
           name: 'Deleted',
           email: 'deleted@example.com',
-          password: 'hash',
+          password: hash,
           deletedAt: new Date(),
         },
       });
 
       const res = await request(app).post('/api/v1/auth/login').send({
         email: 'deleted@example.com',
-        password: 'any',
+        password: password,
       });
 
-      expect(res.status).toBe(403);
-      expect(res.body.error.message).toMatch(/disabled/i);
+      // Now returns 401 to mask existence (was 403)
+      expect(res.status).toBe(401);
+      expect(res.body.error.message).toMatch(/invalid credentials/i);
     });
 
     it('should deny login if user has no password set (e.g. OAuth user)', async () => {
@@ -307,6 +314,53 @@ describe('Auth Feature E2E', () => {
 
       expect(res.status).toBe(401);
       expect(res.body.error.message).toMatch(/invalid credentials/i);
+    });
+
+    it('should allow concurrent sessions (login twice)', async () => {
+      const password = 'Password123!';
+      const hash = await argon2.hash(password);
+
+      const user = await prisma.user.create({
+        data: {
+          name: 'Concurrent',
+          email: 'concurrent@example.com',
+          password: hash,
+        },
+      });
+
+      // Login 1
+      const res1 = await request(app).post('/api/v1/auth/login').send({
+        email: 'concurrent@example.com',
+        password: password,
+      });
+      expect(res1.status).toBe(200);
+
+      // Login 2
+      const res2 = await request(app).post('/api/v1/auth/login').send({
+        email: 'concurrent@example.com',
+        password: password,
+      });
+      expect(res2.status).toBe(200);
+
+      // Verify different tokens
+      const token1 = res1.body.data.accessToken;
+      const token2 = res2.body.data.accessToken;
+      expect(token1).not.toBe(token2);
+
+      // Verify both sessions exist in DB
+      const sessions = await prisma.userSession.findMany({ where: { userId: user.id } });
+      expect(sessions).toHaveLength(2);
+
+      // Verify both tokens work
+      const check1 = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${token1}`);
+      expect(check1.status).toBe(200);
+
+      const check2 = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${token2}`);
+      expect(check2.status).toBe(200);
     });
   });
 
@@ -387,10 +441,42 @@ describe('Auth Feature E2E', () => {
 
   describe('Logout', () => {
     it('should revoke session', async () => {
+      const password = 'Password123!';
+      const hash = await argon2.hash(password);
+
+      // 1. Create User
       const user = await prisma.user.create({
-        data: { email: 'logout@example.com', name: 'Logout', password: 'hash' },
+        data: { email: 'logout@example.com', name: 'Logout', password: hash },
       });
 
+      // 2. Login via API to get Real Tokens
+      const loginRes = await request(app).post('/api/v1/auth/login').send({
+        email: 'logout@example.com',
+        password: password,
+      });
+      expect(loginRes.status).toBe(200);
+      const { accessToken } = loginRes.body.data;
+
+      // 3. Perform Logout using the Real Token
+      const res = await request(app)
+        .post('/api/v1/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(200);
+
+      // 4. Verify Session Revoked in DB
+      // We need to find the session that was created by the login
+      const session = await prisma.userSession.findFirst({ where: { userId: user.id } });
+      expect(session).not.toBeNull();
+      expect(session!.revokedAt).not.toBeNull();
+    });
+  });
+
+  describe('Protected Routes (GET /me)', () => {
+    it('should allow access with valid token', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'me@example.com', name: 'Me', password: 'hash' },
+      });
       const session = await prisma.userSession.create({
         data: {
           userId: user.id,
@@ -398,22 +484,46 @@ describe('Auth Feature E2E', () => {
           expiresAt: addDays(new Date(), 1),
         },
       });
-
-      // Spoof Access Token for Middleware
       const accessToken = jwt.sign(
         { userId: user.id, sessionId: session.id, role: 'user' },
         process.env.JWT_SECRET || 'dev_secret_do_not_use'
       );
 
       const res = await request(app)
-        .post('/api/v1/auth/logout')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${accessToken}`);
 
       expect(res.status).toBe(200);
+      expect(res.body.data.email).toBe('me@example.com');
+    });
 
-      // Verify revoked
-      const updatedSession = await prisma.userSession.findUnique({ where: { id: session.id } });
-      expect(updatedSession!.revokedAt).not.toBeNull();
+    it('should reject access with expired access token', async () => {
+      const accessToken = jwt.sign(
+        { userId: 1, sessionId: 1, role: 'user' },
+        process.env.JWT_SECRET || 'dev_secret_do_not_use',
+        { expiresIn: '-1s' } // Expired immediately
+      );
+
+      const res = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.message).toMatch(/invalid token/i); // jwt verify throws 'jwt expired' but middleware often wraps or returns generic
+    });
+
+    it('should reject malformed or missing headers', async () => {
+      // Case 1: No Header
+      let res = await request(app).get('/api/v1/auth/me');
+      expect(res.status).toBe(401);
+
+      // Case 2: Wrong Scheme
+      res = await request(app).get('/api/v1/auth/me').set('Authorization', 'Basic 123');
+      expect(res.status).toBe(401);
+
+      // Case 3: Empty Token
+      res = await request(app).get('/api/v1/auth/me').set('Authorization', 'Bearer ');
+      expect(res.status).toBe(401);
     });
   });
 
@@ -517,6 +627,51 @@ describe('Auth Feature E2E', () => {
         where: { id: tokenRecord.id },
       });
       expect(updatedToken!.usedAt).not.toBeNull();
+    });
+  });
+
+  describe('Rate Limiting', () => {
+    it('should return 429 when too many requests are made', async () => {
+      // Setup isolated app with aggressive rate limiting
+      const rateLimitApp = express();
+      rateLimitApp.use(express.json());
+
+      // Use the library directly to simulate strict environment
+      const aggressiveLimiter = (await import('express-rate-limit')).default({
+        windowMs: 1000, // 1 second
+        max: 2, // limit each IP to 2 requests per windowMs
+        message: { error: 'Too Many Requests' },
+      });
+
+      rateLimitApp.use(aggressiveLimiter);
+      rateLimitApp.use('/api/v1/auth', authRoutes);
+
+      const endpoint = '/api/v1/auth/register';
+
+      // Request 1: OK
+      let res = await request(rateLimitApp).post(endpoint).send({
+        name: 'Limits',
+        email: `limit1@example.com`,
+        password: 'Pass',
+      });
+      expect(res.status).not.toBe(429);
+
+      // Request 2: OK
+      res = await request(rateLimitApp).post(endpoint).send({
+        name: 'Limits',
+        email: `limit2@example.com`,
+        password: 'Pass',
+      });
+      expect(res.status).not.toBe(429);
+
+      // Request 3: Blocked
+      res = await request(rateLimitApp).post(endpoint).send({
+        name: 'Limits',
+        email: `limit3@example.com`,
+        password: 'Pass',
+      });
+      expect(res.status).toBe(429);
+      expect(res.body.error).toMatch(/too many requests/i);
     });
   });
 });

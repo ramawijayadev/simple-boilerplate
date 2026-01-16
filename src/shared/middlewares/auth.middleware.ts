@@ -19,7 +19,9 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = jwt.verify(token, config.jwt.secret) as UserSessionPayload;
+    const payload = jwt.verify(token, config.jwt.secret, {
+      algorithms: ['HS256'],
+    }) as UserSessionPayload;
     req.user = payload;
     next();
   } catch {
