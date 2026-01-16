@@ -35,7 +35,7 @@ export const helmetConfig: HelmetOptions = {
   frameguard: { action: 'deny' },
   // Strict-Transport-Security
   hsts: {
-    maxAge: 31536000, // 1 year
+    maxAge: config.security.hstsMaxAge,
     includeSubDomains: true,
     preload: true,
   },
@@ -53,7 +53,7 @@ export const corsConfig: CorsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
-  maxAge: 86400, // 24 hours - preflight cache
+  maxAge: config.security.corsMaxAge, // preflight cache
 };
 
 /**

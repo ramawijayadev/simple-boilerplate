@@ -39,7 +39,7 @@ const server = app.listen(config.port, () => {
       env: config.env,
       logLevel: config.log.level,
     },
-    `🚀 Server started on http://localhost:${config.port}`
+    `🚀 Server started on ${config.app.url}`
   );
 });
 
@@ -63,7 +63,7 @@ function gracefulShutdown(signal: string) {
   setTimeout(() => {
     logger.error('Could not close connections in time, forcefully shutting down');
     process.exit(1);
-  }, 10000);
+  }, config.app.gracefulShutdownTimeoutMs);
 }
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
