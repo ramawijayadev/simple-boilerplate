@@ -24,9 +24,9 @@ vi.mock('@/features/example/example.repository', () => ({
 import app from '@/app';
 
 describe('Health Routes', () => {
-  describe('GET /health', () => {
+  describe('GET /api/v1/health', () => {
     it('should return 200 with ok status', async () => {
-      const response = await request(app).get('/health');
+      const response = await request(app).get('/api/v1/health');
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -34,21 +34,21 @@ describe('Health Routes', () => {
     });
 
     it('should return timestamp in response', async () => {
-      const response = await request(app).get('/health');
+      const response = await request(app).get('/api/v1/health');
 
       expect(response.body.data.timestamp).toBeDefined();
       expect(new Date(response.body.data.timestamp).getTime()).not.toBeNaN();
     });
 
     it('should return requestId in response', async () => {
-      const response = await request(app).get('/health');
+      const response = await request(app).get('/api/v1/health');
 
       expect(response.body.requestId).toBeDefined();
       expect(typeof response.body.requestId).toBe('string');
     });
 
     it('should include X-Request-Id header in response', async () => {
-      const response = await request(app).get('/health');
+      const response = await request(app).get('/api/v1/health');
 
       expect(response.headers['x-request-id']).toBeDefined();
     });

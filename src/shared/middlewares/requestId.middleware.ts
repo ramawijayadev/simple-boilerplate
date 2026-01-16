@@ -10,7 +10,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 
-const REQUEST_ID_HEADER = 'X-Request-Id';
+import { config } from '@/config';
+
+const REQUEST_ID_HEADER = config.request.idHeader;
 
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction): void {
   // Use client-provided request ID or generate new one

@@ -56,8 +56,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Routes
-app.use('/auth', authRoutes);
-app.use('/examples', exampleRoutes);
+const v1Router = express.Router();
+v1Router.use('/auth', authRoutes);
+v1Router.use('/examples', exampleRoutes);
+
+app.use('/api/v1', v1Router);
 
 // Error Handler
 interface HttpError extends Error {
@@ -96,7 +99,7 @@ describe('Full User Journey E2E', () => {
   describe('Authentication Module', () => {
     it('should register a new user successfully (Happy Path)', async () => {
       vi.stubEnv('NODE_ENV', 'development');
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         name: 'Test User',
         email: 'test@example.com',
         password: 'Password123!',
@@ -122,7 +125,7 @@ describe('Full User Journey E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         name: 'New User',
         email: 'duplicate@example.com',
         password: 'Password123!',
@@ -132,7 +135,7 @@ describe('Full User Journey E2E', () => {
     });
 
     it('should fail to register with invalid email (Negative Case)', async () => {
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         name: 'Bad Email',
         email: 'invalid-email',
         password: 'Password123!',
@@ -144,14 +147,14 @@ describe('Full User Journey E2E', () => {
     it('should login successfully with correct credentials (Happy Path)', async () => {
       // Register first
       vi.stubEnv('NODE_ENV', 'development');
-      await request(app).post('/auth/register').send({
+      await request(app).post('/api/v1/auth/register').send({
         name: 'Login User',
         email: 'login@example.com',
         password: 'Password123!',
       });
       vi.stubEnv('NODE_ENV', 'test');
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'login@example.com',
         password: 'Password123!',
       });
@@ -164,14 +167,14 @@ describe('Full User Journey E2E', () => {
     it('should fail to login with wrong password (Negative Case)', async () => {
       // Register first
       vi.stubEnv('NODE_ENV', 'development');
-      await request(app).post('/auth/register').send({
+      await request(app).post('/api/v1/auth/register').send({
         name: 'Login User',
         email: 'wrongpass@example.com',
         password: 'Password123!',
       });
       vi.stubEnv('NODE_ENV', 'test');
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'wrongpass@example.com',
         password: 'WrongPassword!',
       });
@@ -182,27 +185,27 @@ describe('Full User Journey E2E', () => {
     it('should get profile/me with valid token', async () => {
       // Register & Login
       vi.stubEnv('NODE_ENV', 'development');
-      await request(app).post('/auth/register').send({
+      await request(app).post('/api/v1/auth/register').send({
         name: 'Profile User',
         email: 'profile@example.com',
         password: 'Password123!',
       });
       vi.stubEnv('NODE_ENV', 'test');
 
-      const loginRes = await request(app).post('/auth/login').send({
+      const loginRes = await request(app).post('/api/v1/auth/login').send({
         email: 'profile@example.com',
         password: 'Password123!',
       });
       const token = loginRes.body.data.accessToken;
 
-      const res = await request(app).get('/auth/me').set('Authorization', `Bearer ${token}`);
+      const res = await request(app).get('/api/v1/auth/me').set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.data.email).toBe('profile@example.com');
     });
 
     it('should fail to access protected route without token (Negative/Security)', async () => {
-      const res = await request(app).get('/auth/me');
+      const res = await request(app).get('/api/v1/auth/me');
       expect(res.status).toBe(401);
     });
   });
@@ -213,14 +216,14 @@ describe('Full User Journey E2E', () => {
     beforeEach(async () => {
       // Setup User & Token for CRUD
       vi.stubEnv('NODE_ENV', 'development');
-      await request(app).post('/auth/register').send({
+      await request(app).post('/api/v1/auth/register').send({
         name: 'CRUD User',
         email: 'crud@example.com',
         password: 'Password123!',
       });
       vi.stubEnv('NODE_ENV', 'test');
 
-      const loginRes = await request(app).post('/auth/login').send({
+      const loginRes = await request(app).post('/api/v1/auth/login').send({
         email: 'crud@example.com',
         password: 'Password123!',
       });
@@ -229,7 +232,7 @@ describe('Full User Journey E2E', () => {
 
     it('should create a new example (Happy Path)', async () => {
       const res = await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           name: 'Test Example',
@@ -243,7 +246,7 @@ describe('Full User Journey E2E', () => {
 
     it('should fail to create example with missing name (Negative Case)', async () => {
       const res = await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           description: 'Missing Name',
@@ -255,15 +258,17 @@ describe('Full User Journey E2E', () => {
     it('should list all examples (Happy Path)', async () => {
       // Create two examples
       await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name: 'Ex 1' });
       await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name: 'Ex 2' });
 
-      const res = await request(app).get('/examples').set('Authorization', `Bearer ${accessToken}`);
+      const res = await request(app)
+        .get('/api/v1/examples')
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveLength(2);
@@ -271,13 +276,13 @@ describe('Full User Journey E2E', () => {
 
     it('should get a single example by ID (Happy Path)', async () => {
       const createRes = await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name: 'Single Ex' });
       const id = createRes.body.data.id;
 
       const res = await request(app)
-        .get(`/examples/${id}`)
+        .get(`/api/v1/examples/${id}`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       expect(res.status).toBe(200);
@@ -286,7 +291,7 @@ describe('Full User Journey E2E', () => {
 
     it('should return 404 for non-existent example ID (Negative Case)', async () => {
       const res = await request(app)
-        .get('/examples/999999')
+        .get('/api/v1/examples/999999')
         .set('Authorization', `Bearer ${accessToken}`);
 
       expect(res.status).toBe(404);
@@ -294,7 +299,7 @@ describe('Full User Journey E2E', () => {
 
     it('should return 400 for invalid ID format (Edge Case)', async () => {
       const res = await request(app)
-        .get('/examples/abc')
+        .get('/api/v1/examples/abc')
         .set('Authorization', `Bearer ${accessToken}`);
 
       // Assuming validation middleware catches non-numeric params if schema defines regex
@@ -304,13 +309,13 @@ describe('Full User Journey E2E', () => {
 
     it('should update an example (Happy Path)', async () => {
       const createRes = await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name: 'Original Name' });
       const id = createRes.body.data.id;
 
       const res = await request(app)
-        .put(`/examples/${id}`)
+        .put(`/api/v1/examples/${id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name: 'Updated Name' });
 
@@ -320,20 +325,20 @@ describe('Full User Journey E2E', () => {
 
     it('should delete an example (Destructive Path)', async () => {
       const createRes = await request(app)
-        .post('/examples')
+        .post('/api/v1/examples')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ name: 'To Delete' });
       const id = createRes.body.data.id;
 
       const res = await request(app)
-        .delete(`/examples/${id}`)
+        .delete(`/api/v1/examples/${id}`)
         .set('Authorization', `Bearer ${accessToken}`);
 
       expect(res.status).toBe(200);
 
       // Verify deletion
       const getRes = await request(app)
-        .get(`/examples/${id}`)
+        .get(`/api/v1/examples/${id}`)
         .set('Authorization', `Bearer ${accessToken}`);
       expect(getRes.status).toBe(404);
     });
@@ -343,14 +348,14 @@ describe('Full User Journey E2E', () => {
     it('should revoke session on logout', async () => {
       // Register/Login
       vi.stubEnv('NODE_ENV', 'development');
-      await request(app).post('/auth/register').send({
+      await request(app).post('/api/v1/auth/register').send({
         name: 'Logout User',
         email: 'logout@example.com',
         password: 'Password123!',
       });
       vi.stubEnv('NODE_ENV', 'test');
 
-      const loginRes = await request(app).post('/auth/login').send({
+      const loginRes = await request(app).post('/api/v1/auth/login').send({
         email: 'logout@example.com',
         password: 'Password123!',
       });
@@ -358,12 +363,12 @@ describe('Full User Journey E2E', () => {
 
       // Logout
       const logoutRes = await request(app)
-        .post('/auth/logout')
+        .post('/api/v1/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`);
       expect(logoutRes.status).toBe(200);
 
       // Try to Refresh (Should fail)
-      const refreshRes = await request(app).post('/auth/refresh').send({
+      const refreshRes = await request(app).post('/api/v1/auth/refresh').send({
         refreshToken,
       });
       expect(refreshRes.status).toBe(401);

@@ -52,9 +52,12 @@ app.use(express.urlencoded({ extended: true, limit: config.request.bodyLimit }))
 /**
  * Feature Routes
  */
-app.use('/health', healthRoutes);
-app.use('/examples', exampleRoutes);
-app.use('/auth', authRoutes);
+const v1Router = express.Router();
+v1Router.use('/health', healthRoutes);
+v1Router.use('/examples', exampleRoutes);
+v1Router.use('/auth', authRoutes);
+
+app.use('/api/v1', v1Router);
 
 if (isDevelopment) {
   app.get('/error', () => {

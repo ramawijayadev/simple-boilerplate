@@ -5,7 +5,7 @@
  * Includes helpers for Crypto (Argon2, JWT) and Email (Mailpit).
  */
 
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { addMinutes, addDays, isAfter } from 'date-fns';
 import { config } from '@/config';
 import { sendEmail } from '@/shared/utils/mailer';
@@ -39,7 +39,7 @@ import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } fro
  */
 function generateAccessToken(payload: UserSessionPayload): string {
   return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: '15m',
+    expiresIn: config.jwt.accessExpiration as SignOptions['expiresIn'],
     issuer: config.jwt.issuer,
     audience: config.jwt.audience,
   });
@@ -88,7 +88,7 @@ export async function register(
   );
 
   // Dispatch verification email...
-  const verifyUrl = `http://localhost:3000/verify-email?token=${verificationToken}`;
+  const verifyUrl = `${config.app.url}/verify-email?token=${verificationToken}`;
 
   await sendEmail(
     input.email,
@@ -294,7 +294,7 @@ export async function forgotPassword(input: ForgotPasswordInput): Promise<void> 
     expiresAt,
   });
 
-  const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
+  const resetUrl = `${config.app.url}/reset-password?token=${token}`;
 
   await sendEmail(
     user.email,

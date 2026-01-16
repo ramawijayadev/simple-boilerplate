@@ -12,7 +12,7 @@ vi.mock('@/features/auth/auth.service');
 
 const app = express();
 app.use(express.json());
-app.use('/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 app.use(errorHandler);
 
 describe('Auth Feature Integration (Route/Controller)', () => {
@@ -20,11 +20,11 @@ describe('Auth Feature Integration (Route/Controller)', () => {
     vi.resetAllMocks();
   });
 
-  describe('POST /auth/register', () => {
+  describe('POST /api/v1/auth/register', () => {
     it('should pass valid input to service and return 200', async () => {
       vi.mocked(authService.register).mockResolvedValue({ message: 'Success' });
 
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         name: 'Test',
         email: 'test@example.com',
         password: 'Password123!',
@@ -39,7 +39,7 @@ describe('Auth Feature Integration (Route/Controller)', () => {
     });
 
     it('should return 400 for invalid input (Zod Validation)', async () => {
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         email: 'bad-email', // Invalid email
         password: '123', // Too short
       });
@@ -50,12 +50,12 @@ describe('Auth Feature Integration (Route/Controller)', () => {
     });
   });
 
-  describe('POST /auth/login', () => {
+  describe('POST /api/v1/auth/login', () => {
     it('should return tokens on success', async () => {
       const mockTokens = { accessToken: 'access', refreshToken: 'refresh' };
       vi.mocked(authService.login).mockResolvedValue(mockTokens);
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'test@example.com',
         password: 'Password123!',
       });
@@ -67,7 +67,7 @@ describe('Auth Feature Integration (Route/Controller)', () => {
     it('should return 401 on service error', async () => {
       vi.mocked(authService.login).mockRejectedValue(new UnauthorizedError('Bad creds'));
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'test@example.com',
         password: 'WrongPassword!',
       });
@@ -77,9 +77,9 @@ describe('Auth Feature Integration (Route/Controller)', () => {
     });
   });
 
-  describe('POST /auth/logout', () => {
+  describe('POST /api/v1/auth/logout', () => {
     it('should return 401 if missing headers (Middleware Check)', async () => {
-      const res = await request(app).post('/auth/logout');
+      const res = await request(app).post('/api/v1/auth/logout');
       expect(res.status).toBe(401);
     });
   });

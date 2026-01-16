@@ -8,6 +8,9 @@
 export interface AppConfig {
   env: string;
   port: number;
+  app: {
+    url: string;
+  };
   cors: {
     origin: string | string[];
   };
@@ -22,11 +25,13 @@ export interface AppConfig {
   request: {
     bodyLimit: string;
     timeoutMs: number;
+    idHeader: string;
   };
   jwt: {
     secret: string;
     issuer: string;
     audience: string;
+    accessExpiration: string;
   };
   auth: {
     refreshTokenExpiresDays: number;
@@ -92,6 +97,9 @@ function buildConfig(): AppConfig {
   return {
     env,
     port,
+    app: {
+      url: getOptional('APP_URL', 'http://localhost:3000'),
+    },
     cors: {
       origin: parseCorsOrigin(corsOrigin),
     },
@@ -106,11 +114,13 @@ function buildConfig(): AppConfig {
     request: {
       bodyLimit,
       timeoutMs,
+      idHeader: getOptional('REQUEST_ID_HEADER', 'X-Request-Id'),
     },
     jwt: {
       secret: getOptional('JWT_SECRET', 'dev_secret_do_not_use'),
       issuer: getOptional('JWT_ISSUER', 'express-api'),
       audience: getOptional('JWT_AUDIENCE', 'express-api-client'),
+      accessExpiration: getOptional('JWT_ACCESS_EXPIRATION', '15m'),
     },
     auth: {
       refreshTokenExpiresDays: parseInt(getOptional('AUTH_REFRESH_TOKEN_EXPIRES_DAYS', '7'), 10),

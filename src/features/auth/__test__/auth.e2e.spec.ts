@@ -38,7 +38,7 @@ import { UserSessionPayload } from '@/features/auth/auth.types';
 // Setup Express App
 const app = express();
 app.use(express.json());
-app.use('/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Error Handling Middleware for Tests
 import { Request, Response, NextFunction } from 'express';
@@ -88,7 +88,7 @@ describe('Auth Feature E2E', () => {
       // Stub env to allow email sending
       vi.stubEnv('NODE_ENV', 'development');
 
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         name: 'New User',
         email: 'new@example.com',
         password: 'SecurePassword123!',
@@ -124,7 +124,7 @@ describe('Auth Feature E2E', () => {
 
     it('should fail validation with weak password or invalid email', async () => {
       // Case: Invalid Email
-      let res = await request(app).post('/auth/register').send({
+      let res = await request(app).post('/api/v1/auth/register').send({
         name: 'Bad Email',
         email: 'bad-email',
         password: 'Password123!',
@@ -132,7 +132,7 @@ describe('Auth Feature E2E', () => {
       expect(res.status).toBe(400);
 
       // Case: Weak Password
-      res = await request(app).post('/auth/register').send({
+      res = await request(app).post('/api/v1/auth/register').send({
         name: 'Weak Pass',
         email: 'weak@example.com',
         password: '123',
@@ -150,7 +150,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/register').send({
+      const res = await request(app).post('/api/v1/auth/register').send({
         name: 'Duplicate',
         email: 'exists@example.com',
         password: 'Password123!',
@@ -175,7 +175,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'login@example.com',
         password: password,
       });
@@ -211,7 +211,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'fail@example.com',
         password: 'WrongPassword',
       });
@@ -238,13 +238,13 @@ describe('Auth Feature E2E', () => {
       });
 
       // 5th attempt (Fail)
-      await request(app).post('/auth/login').send({
+      await request(app).post('/api/v1/auth/login').send({
         email: 'lock@example.com',
         password: 'Wrong',
       });
 
       // 6th attempt (Valid Password, but Account Locked)
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'lock@example.com',
         password: password,
       });
@@ -263,7 +263,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/login').send({
+      const res = await request(app).post('/api/v1/auth/login').send({
         email: 'inactive@example.com',
         password: 'any',
       });
@@ -291,7 +291,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/refresh').send({
+      const res = await request(app).post('/api/v1/auth/refresh').send({
         refreshToken: oldRefreshToken,
       });
 
@@ -317,7 +317,7 @@ describe('Auth Feature E2E', () => {
     });
 
     it('should reject reused or invalid token', async () => {
-      const res = await request(app).post('/auth/refresh').send({
+      const res = await request(app).post('/api/v1/auth/refresh').send({
         refreshToken: 'non-existent-token',
       });
       expect(res.status).toBe(401);
@@ -339,7 +339,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/refresh').send({
+      const res = await request(app).post('/api/v1/auth/refresh').send({
         refreshToken: expiredToken,
       });
 
@@ -369,7 +369,7 @@ describe('Auth Feature E2E', () => {
       );
 
       const res = await request(app)
-        .post('/auth/logout')
+        .post('/api/v1/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`);
 
       expect(res.status).toBe(200);
@@ -397,7 +397,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/verify-email').send({
+      const res = await request(app).post('/api/v1/auth/verify-email').send({
         token: token,
       });
 
@@ -423,7 +423,7 @@ describe('Auth Feature E2E', () => {
         data: { email: 'forgot@example.com', name: 'Forgot', password: 'hash' },
       });
 
-      const res = await request(app).post('/auth/forgot-password').send({
+      const res = await request(app).post('/api/v1/auth/forgot-password').send({
         email: 'forgot@example.com',
       });
 
@@ -462,7 +462,7 @@ describe('Auth Feature E2E', () => {
         },
       });
 
-      const res = await request(app).post('/auth/reset-password').send({
+      const res = await request(app).post('/api/v1/auth/reset-password').send({
         token: token,
         password: 'NewSecurePassword123!',
       });

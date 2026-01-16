@@ -33,7 +33,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   };
   next();
 });
-app.use('/examples', exampleRoutes);
+app.use('/api/v1/examples', exampleRoutes);
 app.use(errorHandler);
 
 const mockExample = {
@@ -49,11 +49,11 @@ describe('Example Feature Integration (Route/Controller)', () => {
     vi.resetAllMocks();
   });
 
-  describe('GET /examples', () => {
+  describe('GET /api/v1/examples', () => {
     it('should return list of examples', async () => {
       vi.mocked(exampleService.getAllExamples).mockResolvedValue([mockExample] as Example[]);
 
-      const res = await request(app).get('/examples');
+      const res = await request(app).get('/api/v1/examples');
 
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveLength(1);
@@ -61,11 +61,11 @@ describe('Example Feature Integration (Route/Controller)', () => {
     });
   });
 
-  describe('GET /examples/:id', () => {
+  describe('GET /api/v1/examples/:id', () => {
     it('should return example by id', async () => {
       vi.mocked(exampleService.getExampleById).mockResolvedValue(mockExample as Example);
 
-      const res = await request(app).get('/examples/1');
+      const res = await request(app).get('/api/v1/examples/1');
 
       expect(res.status).toBe(200);
       expect(res.body.data.id).toBe(1);
@@ -74,17 +74,17 @@ describe('Example Feature Integration (Route/Controller)', () => {
     it('should return 404 if service throws AppError', async () => {
       vi.mocked(exampleService.getExampleById).mockRejectedValue(new AppError('Not found', 404));
 
-      const res = await request(app).get('/examples/999');
+      const res = await request(app).get('/api/v1/examples/999');
 
       expect(res.status).toBe(404);
     });
   });
 
-  describe('POST /examples', () => {
+  describe('POST /api/v1/examples', () => {
     it('should create example', async () => {
       vi.mocked(exampleService.createExample).mockResolvedValue(mockExample as Example);
 
-      const res = await request(app).post('/examples').send({
+      const res = await request(app).post('/api/v1/examples').send({
         name: 'New Example',
         description: 'Desc',
       });
@@ -94,26 +94,26 @@ describe('Example Feature Integration (Route/Controller)', () => {
     });
 
     it('should fail validation on missing name', async () => {
-      const res = await request(app).post('/examples').send({ description: 'No name' });
+      const res = await request(app).post('/api/v1/examples').send({ description: 'No name' });
       expect(res.status).toBe(400);
     });
   });
 
-  describe('PUT /examples/:id', () => {
+  describe('PUT /api/v1/examples/:id', () => {
     it('should update example', async () => {
       vi.mocked(exampleService.updateExample).mockResolvedValue(mockExample as Example);
 
-      const res = await request(app).put('/examples/1').send({ name: 'Updated' });
+      const res = await request(app).put('/api/v1/examples/1').send({ name: 'Updated' });
 
       expect(res.status).toBe(200);
     });
   });
 
-  describe('DELETE /examples/:id', () => {
+  describe('DELETE /api/v1/examples/:id', () => {
     it('should delete example', async () => {
       vi.mocked(exampleService.deleteExample).mockResolvedValue(undefined);
 
-      const res = await request(app).delete('/examples/1');
+      const res = await request(app).delete('/api/v1/examples/1');
 
       expect(res.status).toBe(200);
     });

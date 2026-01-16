@@ -4,7 +4,7 @@
   "description": "A simple Express.js API server with TypeScript",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/server.ts",
+    "dev": "nodemon --exec ts-node --files -r tsconfig-paths/register src/server.ts",
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/server.js",
     "test": "vitest run",
