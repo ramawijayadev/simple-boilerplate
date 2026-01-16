@@ -141,7 +141,7 @@ describe('Full User Journey E2E', () => {
         password: 'Password123!',
       });
 
-      expect(res.status).toBe(400); // Bad Request (Validation)
+      expect(res.status).toBe(422); // Validation (Unprocessable Entity)
     });
 
     it('should login successfully with correct credentials (Happy Path)', async () => {
@@ -252,7 +252,7 @@ describe('Full User Journey E2E', () => {
           description: 'Missing Name',
         });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
     });
 
     it('should list all examples (Happy Path)', async () => {
@@ -306,7 +306,7 @@ describe('Full User Journey E2E', () => {
 
       // Assuming validation middleware catches non-numeric params if schema defines regex
       // If schema defines ID as number string, 'abc' fails.
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
     });
 
     it('should update an example (Happy Path)', async () => {

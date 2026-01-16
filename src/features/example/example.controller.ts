@@ -90,7 +90,7 @@ export async function destroy(req: Request, res: Response, next: NextFunction): 
 
     res.status(200).json({
       success: true,
-      message: 'Example deleted successfully',
+      data: null,
       requestId: req.id,
     });
   } catch (error) {

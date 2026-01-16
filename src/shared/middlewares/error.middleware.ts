@@ -47,7 +47,7 @@ function getStatusCode(error: Error): number {
   }
 
   if (error.name === 'ValidationError') {
-    return 400;
+    return 422;
   }
 
   return 500;

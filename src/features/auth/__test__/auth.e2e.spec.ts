@@ -129,7 +129,7 @@ describe('Auth Feature E2E', () => {
         email: 'bad-email',
         password: 'Password123!',
       });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
 
       // Case: Weak Password
       res = await request(app).post('/api/v1/auth/register').send({
@@ -137,7 +137,7 @@ describe('Auth Feature E2E', () => {
         email: 'weak@example.com',
         password: '123',
       });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
     });
 
     it('should reject duplicate email', async () => {

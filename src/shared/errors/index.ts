@@ -6,7 +6,7 @@
 
 export { AppError } from '@/shared/errors/AppError';
 export { BadRequestError } from '@/shared/errors/BadRequestError';
-export { ValidationError, type ValidationDetail } from '@/shared/errors/ValidationError';
+export { ValidationError, type ValidationDetails } from '@/shared/errors/ValidationError';
 export { UnauthorizedError } from '@/shared/errors/UnauthorizedError';
 export { ForbiddenError } from '@/shared/errors/ForbiddenError';
 export { NotFoundError } from '@/shared/errors/NotFoundError';

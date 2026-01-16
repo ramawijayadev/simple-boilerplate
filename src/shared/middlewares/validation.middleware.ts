@@ -9,7 +9,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 import { z, ZodError, ZodSchema } from 'zod';
-import { ValidationError, ValidationDetail } from '@/shared/errors';
+import { ValidationError, ValidationDetails } from '@/shared/errors';
 
 /**
  * Validation schema configuration
@@ -21,14 +21,17 @@ export interface ValidationSchemas {
 }
 
 /**
- * Convert Zod errors to ValidationDetails
+ * Convert Zod errors to ValidationDetails object format
  */
-function zodErrorToDetails(error: ZodError): ValidationDetail[] {
-  return error.issues.map((issue) => ({
-    field: issue.path.join('.'),
-    message: issue.message,
-    value: undefined, // Don't expose actual values for security
-  }));
+function zodErrorToDetails(error: ZodError, prefix?: string): ValidationDetails {
+  const details: ValidationDetails = {};
+
+  for (const issue of error.issues) {
+    const field = prefix ? `${prefix}.${issue.path.join('.')}` : issue.path.join('.') || 'value';
+    details[field] = issue.message;
+  }
+
+  return details;
 }
 
 /**
@@ -51,13 +54,13 @@ function zodErrorToDetails(error: ZodError): ValidationDetail[] {
  */
 export function validate(schemas: ValidationSchemas): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
-    const errors: ValidationDetail[] = [];
+    const errors: ValidationDetails = {};
 
     // Validate body
     if (schemas.body) {
       const result = schemas.body.safeParse(req.body);
       if (!result.success) {
-        errors.push(...zodErrorToDetails(result.error));
+        Object.assign(errors, zodErrorToDetails(result.error));
       } else {
         req.body = result.data;
       }
@@ -67,12 +70,7 @@ export function validate(schemas: ValidationSchemas): RequestHandler {
     if (schemas.query) {
       const result = schemas.query.safeParse(req.query);
       if (!result.success) {
-        errors.push(
-          ...zodErrorToDetails(result.error).map((e) => ({
-            ...e,
-            field: `query.${e.field}`,
-          }))
-        );
+        Object.assign(errors, zodErrorToDetails(result.error, 'query'));
       } else {
         req.query = result.data as ParsedQs;
       }
@@ -82,20 +80,15 @@ export function validate(schemas: ValidationSchemas): RequestHandler {
     if (schemas.params) {
       const result = schemas.params.safeParse(req.params);
       if (!result.success) {
-        errors.push(
-          ...zodErrorToDetails(result.error).map((e) => ({
-            ...e,
-            field: `params.${e.field}`,
-          }))
-        );
+        Object.assign(errors, zodErrorToDetails(result.error, 'params'));
       } else {
         req.params = result.data as ParamsDictionary;
       }
     }
 
     // If any errors, throw ValidationError
-    if (errors.length > 0) {
-      throw new ValidationError('Validation failed', errors);
+    if (Object.keys(errors).length > 0) {
+      throw new ValidationError('Invalid request data', errors);
     }
 
     next();

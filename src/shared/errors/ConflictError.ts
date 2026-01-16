@@ -8,6 +8,6 @@ import { AppError } from '@/shared/errors/AppError';
 
 export class ConflictError extends AppError {
   constructor(message: string = 'Resource conflict', code?: string) {
-    super(message, 409, code || 'CONFLICT');
+    super(message, 409, code || 'RESOURCE_CONFLICT');
   }
 }

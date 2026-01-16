@@ -44,7 +44,7 @@ describe('Auth Feature Integration (Route/Controller)', () => {
         password: '123', // Too short
       });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
       expect(res.body.success).toBe(false);
       expect(authService.register).not.toHaveBeenCalled();
     });

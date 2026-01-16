@@ -68,7 +68,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
 export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {
-      res.status(200).json({ success: true, message: 'Logged out successfully' });
+      res.status(200).json({ success: true, data: null });
       return;
     }
 
@@ -78,7 +78,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
 
     res.status(200).json({
       success: true,
-      message: 'Logged out successfully',
+      data: null,
       requestId: req.id,
     });
   } catch (error) {
@@ -111,7 +111,7 @@ export async function verifyEmail(req: Request, res: Response, next: NextFunctio
 
     res.status(200).json({
       success: true,
-      message: 'Email verified successfully',
+      data: null,
       requestId: req.id,
     });
   } catch (error) {
@@ -129,7 +129,7 @@ export async function forgotPassword(
 
     res.status(200).json({
       success: true,
-      message: 'If the email exists, a password reset link has been sent',
+      data: null,
       requestId: req.id,
     });
   } catch (error) {
@@ -147,7 +147,7 @@ export async function resetPassword(
 
     res.status(200).json({
       success: true,
-      message: 'Password has been reset successfully',
+      data: null,
       requestId: req.id,
     });
   } catch (error) {

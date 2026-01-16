@@ -22,7 +22,7 @@ export class NotFoundError extends AppError {
     resource?: string,
     resourceId?: string | number
   ) {
-    super(message, 404, 'NOT_FOUND');
+    super(message, 404, 'RESOURCE_NOT_FOUND');
     this.resource = resource;
     this.resourceId = resourceId;
   }

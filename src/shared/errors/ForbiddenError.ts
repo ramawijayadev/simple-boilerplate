@@ -8,6 +8,6 @@ import { AppError } from '@/shared/errors/AppError';
 
 export class ForbiddenError extends AppError {
   constructor(message: string = 'Forbidden', code?: string) {
-    super(message, 403, code || 'FORBIDDEN');
+    super(message, 403, code || 'AUTH_ACCESS_DENIED');
   }
 }

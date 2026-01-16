@@ -132,7 +132,7 @@ describe('Example Feature Integration (Route/Controller)', () => {
 
     it('should fail validation on missing name', async () => {
       const res = await request(app).post('/api/v1/examples').send({ description: 'No name' });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(422);
     });
   });
 
