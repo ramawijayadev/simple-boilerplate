@@ -5,7 +5,7 @@
 import { Request, Response } from 'express';
 import { getHealthStatus } from '@/features/health/health.service';
 
-export function getHealth(req: Request, res: Response): void {
+export function index(req: Request, res: Response): void {
   req.log.info('Health check requested');
 
   const healthStatus = getHealthStatus();

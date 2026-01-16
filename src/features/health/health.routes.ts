@@ -3,11 +3,11 @@
  */
 
 import { Router } from 'express';
-import { getHealth } from '@/features/health/health.controller';
+import { index } from '@/features/health/health.controller';
 
 const router = Router();
 
 // GET /health - Health check endpoint
-router.get('/', getHealth);
+router.get('/', index);
 
 export default router;
