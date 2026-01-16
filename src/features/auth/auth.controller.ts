@@ -10,16 +10,13 @@ import {
   getProfile as getProfileService,
 } from '@/features/auth/auth.service';
 import { UserSessionPayload } from '@/features/auth/auth.types';
+import { sendOk, sendCreated, getRequestId } from '@/shared/utils/apiResponse';
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await registerService(req.body);
 
-    res.status(201).json({
-      success: true,
-      data: result,
-      requestId: req.id,
-    });
+    sendCreated(res, result, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -35,11 +32,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
     const tokens = await loginService(input);
 
-    res.status(200).json({
-      success: true,
-      data: tokens,
-      requestId: req.id,
-    });
+    sendOk(res, tokens, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -55,11 +48,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
 
     const tokens = await refreshService(input);
 
-    res.status(200).json({
-      success: true,
-      data: tokens,
-      requestId: req.id,
-    });
+    sendOk(res, tokens, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -68,7 +57,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
 export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {
-      res.status(200).json({ success: true, data: null });
+      sendOk(res, null);
       return;
     }
 
@@ -76,11 +65,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
 
     await logoutService(userSession);
 
-    res.status(200).json({
-      success: true,
-      data: null,
-      requestId: req.id,
-    });
+    sendOk(res, null, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -95,11 +80,7 @@ export async function me(req: Request, res: Response, next: NextFunction): Promi
     const { userId } = req.user as UserSessionPayload;
     const user = await getProfileService(userId);
 
-    res.status(200).json({
-      success: true,
-      data: user,
-      requestId: req.id,
-    });
+    sendOk(res, user, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -109,11 +90,7 @@ export async function verifyEmail(req: Request, res: Response, next: NextFunctio
   try {
     await verifyEmailService(req.body);
 
-    res.status(200).json({
-      success: true,
-      data: null,
-      requestId: req.id,
-    });
+    sendOk(res, null, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -127,11 +104,7 @@ export async function forgotPassword(
   try {
     await forgotPasswordService(req.body);
 
-    res.status(200).json({
-      success: true,
-      data: null,
-      requestId: req.id,
-    });
+    sendOk(res, null, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -145,11 +118,7 @@ export async function resetPassword(
   try {
     await resetPasswordService(req.body);
 
-    res.status(200).json({
-      success: true,
-      data: null,
-      requestId: req.id,
-    });
+    sendOk(res, null, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }

@@ -10,6 +10,7 @@ import {
   updateExample,
   deleteExample,
 } from '@/features/example/example.service';
+import { sendOk, sendCreated, getRequestId } from '@/shared/utils/apiResponse';
 
 export async function index(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -20,11 +21,9 @@ export async function index(req: Request, res: Response, next: NextFunction): Pr
 
     const result = await getAllExamples({ page, perPage });
 
-    res.status(200).json({
-      success: true,
-      data: result.data,
-      meta: result.meta,
-      requestId: req.id,
+    sendOk(res, result.data, {
+      meta: result.meta as unknown as Record<string, unknown>,
+      requestId: getRequestId(req),
     });
   } catch (error) {
     next(error);
@@ -38,11 +37,7 @@ export async function show(req: Request, res: Response, next: NextFunction): Pro
 
     const example = await getExampleById(id);
 
-    res.status(200).json({
-      success: true,
-      data: example,
-      requestId: req.id,
-    });
+    sendOk(res, example, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -54,11 +49,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 
     const example = await createExample(req.body);
 
-    res.status(201).json({
-      success: true,
-      data: example,
-      requestId: req.id,
-    });
+    sendCreated(res, example, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -71,11 +62,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 
     const example = await updateExample(id, req.body);
 
-    res.status(200).json({
-      success: true,
-      data: example,
-      requestId: req.id,
-    });
+    sendOk(res, example, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }
@@ -88,11 +75,7 @@ export async function destroy(req: Request, res: Response, next: NextFunction): 
 
     await deleteExample(id);
 
-    res.status(200).json({
-      success: true,
-      data: null,
-      requestId: req.id,
-    });
+    sendOk(res, null, { requestId: getRequestId(req) });
   } catch (error) {
     next(error);
   }

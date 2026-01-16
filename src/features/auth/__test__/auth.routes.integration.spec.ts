@@ -22,7 +22,10 @@ describe('Auth Feature Integration (Route/Controller)', () => {
 
   describe('POST /api/v1/auth/register', () => {
     it('should pass valid input to service and return 200', async () => {
-      vi.mocked(authService.register).mockResolvedValue({ message: 'Success' });
+      vi.mocked(authService.register).mockResolvedValue({
+        message: 'Success',
+        user: { id: 1, email: 'test@example.com', name: 'Test' },
+      });
 
       const res = await request(app).post('/api/v1/auth/register').send({
         name: 'Test',

@@ -4,15 +4,12 @@
 
 import { Request, Response } from 'express';
 import { getHealthStatus } from '@/features/health/health.service';
+import { sendOk, getRequestId } from '@/shared/utils/apiResponse';
 
 export function index(req: Request, res: Response): void {
   req.log.info('Health check requested');
 
   const healthStatus = getHealthStatus();
 
-  res.status(200).json({
-    success: true,
-    data: healthStatus,
-    requestId: req.id,
-  });
+  sendOk(res, healthStatus, { requestId: getRequestId(req) });
 }
