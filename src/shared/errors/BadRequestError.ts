@@ -4,7 +4,7 @@
  * For general bad request errors.
  */
 
-import { AppError } from './AppError';
+import { AppError } from '@/shared/errors/AppError';
 
 export class BadRequestError extends AppError {
   constructor(message: string = 'Bad Request', code?: string) {

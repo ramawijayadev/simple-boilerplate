@@ -11,7 +11,7 @@ import {
   verifyEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
-} from './auth.schema';
+} from '@/features/auth/auth.schema';
 import {
   register,
   login,
@@ -21,7 +21,7 @@ import {
   forgotPassword,
   resetPassword,
   me,
-} from './auth.controller';
+} from '@/features/auth/auth.controller';
 import { authenticate } from '@/shared/middlewares/auth.middleware';
 
 const router = Router();

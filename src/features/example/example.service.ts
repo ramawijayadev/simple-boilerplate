@@ -4,8 +4,13 @@
  * Business logic for example CRUD operations.
  */
 
-import * as exampleRepository from './example.repository';
-import type { Example, ExampleId, CreateExampleInput, UpdateExampleInput } from './example.types';
+import * as exampleRepository from '@/features/example/example.repository';
+import type {
+  Example,
+  ExampleId,
+  CreateExampleInput,
+  UpdateExampleInput,
+} from '@/features/example/example.types';
 import { NotFoundError } from '@/shared/errors';
 
 /**

@@ -9,8 +9,8 @@ import {
   updateExampleSchema,
   getExampleSchema,
   deleteExampleSchema,
-} from './example.schema';
-import { index, show, create, update, destroy } from './example.controller';
+} from '@/features/example/example.schema';
+import { index, show, create, update, destroy } from '@/features/example/example.controller';
 
 import { authenticate } from '@/shared/middlewares/auth.middleware';
 

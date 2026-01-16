@@ -7,9 +7,9 @@
 // Load environment variables first - must be at the very top
 import 'dotenv/config';
 
-import app from './app';
-import { config } from './config';
-import { logger } from './shared/utils/logger';
+import app from '@/app';
+import { config } from '@/config';
+import { logger } from '@/shared/utils/logger';
 
 /**
  * Handle Uncaught Exceptions

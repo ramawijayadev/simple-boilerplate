@@ -6,10 +6,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotFoundError } from '@/shared/errors';
-import type { Example } from '../example.types';
+import type { Example } from '@/features/example/example.types';
 
 // Mock the repository
-vi.mock('../example.repository', () => ({
+vi.mock('@/features/example/example.repository', () => ({
   findAll: vi.fn(),
   findById: vi.fn(),
   create: vi.fn(),
@@ -18,14 +18,14 @@ vi.mock('../example.repository', () => ({
 }));
 
 // Import after mocking
-import * as exampleRepository from '../example.repository';
+import * as exampleRepository from '@/features/example/example.repository';
 import {
   getAllExamples,
   getExampleById,
   createExample,
   updateExample,
   deleteExample,
-} from '../example.service';
+} from '@/features/example/example.service';
 
 // Mock example data
 const mockExample: Example = {

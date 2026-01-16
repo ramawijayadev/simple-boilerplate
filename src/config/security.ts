@@ -4,7 +4,7 @@
  * Centralized security settings for all security middleware.
  */
 
-import { config } from './index';
+import { config } from '@/config';
 import type { CorsOptions } from 'cors';
 import type { Options as RateLimitOptions } from 'express-rate-limit';
 import type { HelmetOptions } from 'helmet';

@@ -4,7 +4,7 @@
  * For resource not found errors.
  */
 
-import { AppError } from './AppError';
+import { AppError } from '@/shared/errors/AppError';
 
 export class NotFoundError extends AppError {
   /**

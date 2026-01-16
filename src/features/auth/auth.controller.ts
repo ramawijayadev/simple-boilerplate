@@ -14,8 +14,8 @@ import {
   forgotPassword as forgotPasswordService,
   resetPassword as resetPasswordService,
   getProfile as getProfileService,
-} from './auth.service';
-import { UserSessionPayload } from './auth.types';
+} from '@/features/auth/auth.service';
+import { UserSessionPayload } from '@/features/auth/auth.types';
 
 /**
  * Handle user registration requests.

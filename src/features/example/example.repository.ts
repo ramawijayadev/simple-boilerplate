@@ -5,7 +5,12 @@
  */
 
 import prisma from '@/shared/utils/prisma';
-import type { Example, CreateExampleInput, UpdateExampleInput, ExampleId } from './example.types';
+import type {
+  Example,
+  CreateExampleInput,
+  UpdateExampleInput,
+  ExampleId,
+} from '@/features/example/example.types';
 
 /**
  * Find all examples (excluding soft-deleted)

@@ -3,7 +3,7 @@
  */
 
 import { Request, Response } from 'express';
-import { getHealthStatus } from './health.service';
+import { getHealthStatus } from '@/features/health/health.service';
 
 /**
  * GET /health

@@ -4,7 +4,7 @@
  * For resource conflicts (duplicate entries, etc.).
  */
 
-import { AppError } from './AppError';
+import { AppError } from '@/shared/errors/AppError';
 
 export class ConflictError extends AppError {
   constructor(message: string = 'Resource conflict', code?: string) {

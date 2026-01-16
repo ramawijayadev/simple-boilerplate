@@ -6,25 +6,25 @@
 
 import express, { Express } from 'express';
 
-import { config, isDevelopment } from './config';
+import { config, isDevelopment } from '@/config';
 
 import {
   helmetMiddleware,
   corsMiddleware,
   rateLimitMiddleware,
   hppMiddleware,
-} from './shared/middlewares/security.middleware';
+} from '@/shared/middlewares/security.middleware';
 
-import { requestIdMiddleware } from './shared/middlewares/requestId.middleware';
-import { loggingMiddleware } from './shared/middlewares/logging.middleware';
-import { defaultTimeoutMiddleware } from './shared/middlewares/timeout.middleware';
+import { requestIdMiddleware } from '@/shared/middlewares/requestId.middleware';
+import { loggingMiddleware } from '@/shared/middlewares/logging.middleware';
+import { defaultTimeoutMiddleware } from '@/shared/middlewares/timeout.middleware';
 
-import { notFoundHandler } from './shared/middlewares/notFound.middleware';
-import { errorHandler } from './shared/middlewares/error.middleware';
+import { notFoundHandler } from '@/shared/middlewares/notFound.middleware';
+import { errorHandler } from '@/shared/middlewares/error.middleware';
 
-import healthRoutes from './features/health/health.routes';
-import exampleRoutes from './features/example/example.routes';
-import authRoutes from './features/auth/auth.routes';
+import healthRoutes from '@/features/health/health.routes';
+import exampleRoutes from '@/features/example/example.routes';
+import authRoutes from '@/features/auth/auth.routes';
 
 const app: Express = express();
 

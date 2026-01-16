@@ -4,7 +4,7 @@
  * For validation failures with field-level details.
  */
 
-import { AppError } from './AppError';
+import { AppError } from '@/shared/errors/AppError';
 
 export interface ValidationDetail {
   field: string;

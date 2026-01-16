@@ -4,7 +4,7 @@
  * For authentication failures.
  */
 
-import { AppError } from './AppError';
+import { AppError } from '@/shared/errors/AppError';
 
 export class UnauthorizedError extends AppError {
   constructor(message: string = 'Unauthorized', code?: string) {

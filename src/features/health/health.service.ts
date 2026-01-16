@@ -2,7 +2,7 @@
  * Health Service
  */
 
-import { HealthStatus } from './health.types';
+import { HealthStatus } from '@/features/health/health.types';
 
 /**
  * Get current health status

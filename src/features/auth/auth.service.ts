@@ -15,7 +15,7 @@ import {
   generateRandomToken,
   hashToken,
 } from '@/shared/utils/crypto';
-import * as authRepository from './auth.repository';
+import * as authRepository from '@/features/auth/auth.repository';
 import {
   UserSessionPayload,
   AuthTokens,
@@ -25,7 +25,7 @@ import {
   VerifyEmailInput,
   ForgotPasswordInput,
   ResetPasswordInput,
-} from './auth.types';
+} from '@/features/auth/auth.types';
 import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '@/shared/errors';
 
 // ============================================

@@ -4,7 +4,7 @@
  * For authorization failures (authenticated but not allowed).
  */
 
-import { AppError } from './AppError';
+import { AppError } from '@/shared/errors/AppError';
 
 export class ForbiddenError extends AppError {
   constructor(message: string = 'Forbidden', code?: string) {

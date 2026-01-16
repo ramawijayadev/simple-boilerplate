@@ -4,10 +4,10 @@
  * Central export for all custom error classes.
  */
 
-export { AppError } from './AppError';
-export { BadRequestError } from './BadRequestError';
-export { ValidationError, type ValidationDetail } from './ValidationError';
-export { UnauthorizedError } from './UnauthorizedError';
-export { ForbiddenError } from './ForbiddenError';
-export { NotFoundError } from './NotFoundError';
-export { ConflictError } from './ConflictError';
+export { AppError } from '@/shared/errors/AppError';
+export { BadRequestError } from '@/shared/errors/BadRequestError';
+export { ValidationError, type ValidationDetail } from '@/shared/errors/ValidationError';
+export { UnauthorizedError } from '@/shared/errors/UnauthorizedError';
+export { ForbiddenError } from '@/shared/errors/ForbiddenError';
+export { NotFoundError } from '@/shared/errors/NotFoundError';
+export { ConflictError } from '@/shared/errors/ConflictError';

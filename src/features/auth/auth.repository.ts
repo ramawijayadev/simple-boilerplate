@@ -1,6 +1,6 @@
 import { prisma } from '@/shared/utils/prisma';
 import type { User, UserSession, EmailVerificationToken, PasswordResetToken } from '@prisma/client';
-import { RegisterInput } from './auth.types';
+import { RegisterInput } from '@/features/auth/auth.types';
 
 /**
  * Find a user by their email address.

@@ -9,7 +9,7 @@ import {
   createExample,
   updateExample,
   deleteExample,
-} from './example.service';
+} from '@/features/example/example.service';
 
 /**
  * GET /examples

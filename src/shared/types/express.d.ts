@@ -5,7 +5,7 @@
  */
 
 import { Logger } from 'pino';
-import { UserSessionPayload } from './auth';
+import { UserSessionPayload } from '@/shared/types/auth';
 
 declare global {
   namespace Express {
