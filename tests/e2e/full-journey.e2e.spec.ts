@@ -272,6 +272,8 @@ describe('Full User Journey E2E', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveLength(2);
+      expect(res.body.meta).toBeDefined();
+      expect(res.body.meta.total).toBe(2);
     });
 
     it('should get a single example by ID (Happy Path)', async () => {

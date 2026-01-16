@@ -16,3 +16,5 @@ export interface UpdateExampleInput {
   name?: string;
   description?: string | null;
 }
+
+export type { PaginationOptions, PaginatedResult } from '@/shared/types/pagination.types';

@@ -10,14 +10,18 @@ import type {
   ExampleId,
   CreateExampleInput,
   UpdateExampleInput,
+  PaginatedResult,
 } from '@/features/example/example.types';
 import { NotFoundError } from '@/shared/errors';
 
 /**
- * Get all examples (excluding soft-deleted)
+ * Get all examples (excluding soft-deleted) with pagination
  */
-export async function getAllExamples(): Promise<Example[]> {
-  return exampleRepository.findAll();
+export async function getAllExamples(options: {
+  page: number;
+  perPage: number;
+}): Promise<PaginatedResult<Example>> {
+  return exampleRepository.findAll(options);
 }
 
 /**

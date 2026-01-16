@@ -26,8 +26,8 @@ async function main() {
   await prisma.example.deleteMany();
   console.log('✓ Cleared existing examples');
 
-  // Generate 100 example records
-  const examples = Array.from({ length: 100 }, (_, i) => ({
+  // Generate 1000 example records
+  const examples = Array.from({ length: 1000 }, (_, i) => ({
     name: `Example ${i + 1}`,
     description: i % 5 === 0 ? null : `Description for example ${i + 1}`,
     createdBy: i % 3 === 0 ? 'admin' : 'user',

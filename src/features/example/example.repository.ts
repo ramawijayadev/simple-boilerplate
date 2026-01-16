@@ -13,17 +13,53 @@ import type {
 } from '@/features/example/example.types';
 
 /**
- * Find all examples (excluding soft-deleted)
+ * Find all examples (excluding soft-deleted) with pagination
  */
-export async function findAll(): Promise<Example[]> {
-  return prisma.example.findMany({
-    where: {
-      deletedAt: null,
+export async function findAll(options: { page: number; perPage: number }): Promise<{
+  data: Example[];
+  meta: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+  };
+}> {
+  const { page, perPage } = options;
+  const skip = (page - 1) * perPage;
+
+  const [total, data] = await Promise.all([
+    prisma.example.count({
+      where: {
+        deletedAt: null,
+      },
+    }),
+    prisma.example.findMany({
+      where: {
+        deletedAt: null,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip,
+      take: perPage,
+    }),
+  ]);
+
+  const lastPage = Math.ceil(total / perPage);
+
+  return {
+    data,
+    meta: {
+      total,
+      per_page: perPage,
+      current_page: page,
+      last_page: lastPage,
+      from: skip + 1,
+      to: skip + data.length,
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  };
 }
 
 /**

@@ -17,13 +17,17 @@ import {
  */
 export async function index(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    req.log.info('Getting all examples');
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const perPage = parseInt(req.query.per_page as string, 10) || 15;
 
-    const examples = await getAllExamples();
+    req.log.info({ page, perPage }, 'Getting all examples');
+
+    const result = await getAllExamples({ page, perPage });
 
     res.status(200).json({
       success: true,
-      data: examples,
+      data: result.data,
+      meta: result.meta,
       requestId: req.id,
     });
   } catch (error) {

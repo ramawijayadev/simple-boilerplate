@@ -5,6 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { Example } from '@prisma/client';
 import { Logger } from 'pino';
 import exampleRoutes from '@/features/example/example.routes';
+import { PaginatedResult } from '@/features/example/example.types';
 import * as exampleService from '@/features/example/example.service';
 import { errorHandler } from '@/shared/middlewares/error.middleware';
 import { AppError } from '@/shared/errors';
@@ -15,8 +16,7 @@ vi.mock('@/features/example/example.service');
 // Mock Auth Middleware Module
 vi.mock('@/shared/middlewares/auth.middleware', () => ({
   authenticate: (req: Request, res: Response, next: NextFunction) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (req as any).user = { userId: 1, role: 'user' };
+    req.user = { userId: 1, role: 'user', sessionId: 1 };
     next();
   },
 }));
@@ -30,7 +30,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-  };
+    debug: vi.fn(),
+    trace: vi.fn(),
+    fatal: vi.fn(),
+    level: 'info',
+    silent: vi.fn(),
+    child: vi.fn(),
+  } as unknown as Logger;
   next();
 });
 app.use('/api/v1/examples', exampleRoutes);
@@ -50,14 +56,45 @@ describe('Example Feature Integration (Route/Controller)', () => {
   });
 
   describe('GET /api/v1/examples', () => {
-    it('should return list of examples', async () => {
-      vi.mocked(exampleService.getAllExamples).mockResolvedValue([mockExample] as Example[]);
+    it('should return list of examples with pagination', async () => {
+      vi.mocked(exampleService.getAllExamples).mockResolvedValue({
+        data: [mockExample],
+        meta: {
+          total: 1,
+          per_page: 15,
+          current_page: 1,
+          last_page: 1,
+          from: 1,
+          to: 1,
+        },
+      } as unknown as PaginatedResult<Example>);
 
       const res = await request(app).get('/api/v1/examples');
 
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveLength(1);
-      expect(exampleService.getAllExamples).toHaveBeenCalled();
+      expect(res.body.meta).toBeDefined();
+      expect(res.body.meta.total).toBe(1);
+      expect(exampleService.getAllExamples).toHaveBeenCalledWith({ page: 1, perPage: 15 });
+    });
+
+    it('should handle pagination query params', async () => {
+      vi.mocked(exampleService.getAllExamples).mockResolvedValue({
+        data: [],
+        meta: {
+          total: 0,
+          per_page: 10,
+          current_page: 2,
+          last_page: 0,
+          from: 0,
+          to: 0,
+        },
+      } as unknown as PaginatedResult<Example>);
+
+      const res = await request(app).get('/api/v1/examples?page=2&per_page=10');
+
+      expect(res.status).toBe(200);
+      expect(exampleService.getAllExamples).toHaveBeenCalledWith({ page: 2, perPage: 10 });
     });
   });
 

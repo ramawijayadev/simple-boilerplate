@@ -46,21 +46,43 @@ describe('Example Service', () => {
   });
 
   describe('getAllExamples', () => {
-    it('should return all examples from repository', async () => {
-      vi.mocked(exampleRepository.findAll).mockResolvedValue([mockExample]);
+    it('should return paginated examples from repository', async () => {
+      const paginatedResult = {
+        data: [mockExample],
+        meta: {
+          total: 1,
+          per_page: 15,
+          current_page: 1,
+          last_page: 1,
+          from: 1,
+          to: 1,
+        },
+      };
+      vi.mocked(exampleRepository.findAll).mockResolvedValue(paginatedResult);
 
-      const result = await getAllExamples();
+      const result = await getAllExamples({ page: 1, perPage: 15 });
 
-      expect(exampleRepository.findAll).toHaveBeenCalledOnce();
-      expect(result).toEqual([mockExample]);
+      expect(exampleRepository.findAll).toHaveBeenCalledWith({ page: 1, perPage: 15 });
+      expect(result).toEqual(paginatedResult);
     });
 
-    it('should return empty array when no examples', async () => {
-      vi.mocked(exampleRepository.findAll).mockResolvedValue([]);
+    it('should return empty data when no examples', async () => {
+      const emptyResult = {
+        data: [],
+        meta: {
+          total: 0,
+          per_page: 15,
+          current_page: 1,
+          last_page: 0,
+          from: 0,
+          to: 0,
+        },
+      };
+      vi.mocked(exampleRepository.findAll).mockResolvedValue(emptyResult);
 
-      const result = await getAllExamples();
+      const result = await getAllExamples({ page: 1, perPage: 15 });
 
-      expect(result).toEqual([]);
+      expect(result).toEqual(emptyResult);
     });
   });
 

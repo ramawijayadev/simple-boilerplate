@@ -223,7 +223,6 @@ export async function getProfile(userId: number) {
   }
 
   // Deselect sensitive fields if not handled by repository/ORM
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password: _password, ...profile } = user;
   return profile;
 }
