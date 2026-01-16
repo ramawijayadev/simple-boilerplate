@@ -203,3 +203,10 @@ export const config: AppConfig = buildConfig();
 export const isDevelopment = config.env === 'development';
 export const isProduction = config.env === 'production';
 export const isTest = config.env === 'test';
+
+// Enforce critical secrets in production
+if (isProduction) {
+  if (config.jwt.secret === DEFAULT_JWT_SECRET) {
+    throw new Error('JWT_SECRET must be set in production environment');
+  }
+}

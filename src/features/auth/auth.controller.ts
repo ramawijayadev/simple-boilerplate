@@ -1,9 +1,3 @@
-/**
- * Auth Controller
- *
- * HTTP handlers for authentication endpoints.
- */
-
 import { Request, Response, NextFunction } from 'express';
 import {
   register as registerService,
@@ -17,9 +11,6 @@ import {
 } from '@/features/auth/auth.service';
 import { UserSessionPayload } from '@/features/auth/auth.types';
 
-/**
- * Handle user registration requests.
- */
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await registerService(req.body);
@@ -34,9 +25,6 @@ export async function register(req: Request, res: Response, next: NextFunction):
   }
 }
 
-/**
- * Handle user login and token generation.
- */
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const input = {
@@ -57,9 +45,6 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
   }
 }
 
-/**
- * Refresh access tokens using a valid refresh token.
- */
 export async function refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const input = {
@@ -80,9 +65,6 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
   }
 }
 
-/**
- * Revoke the user's current session.
- */
 export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {
@@ -104,9 +86,6 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
   }
 }
 
-/**
- * Get current user profile.
- */
 export async function me(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {
@@ -126,9 +105,6 @@ export async function me(req: Request, res: Response, next: NextFunction): Promi
   }
 }
 
-/**
- * Verify a user's email address.
- */
 export async function verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     await verifyEmailService(req.body);
@@ -143,9 +119,6 @@ export async function verifyEmail(req: Request, res: Response, next: NextFunctio
   }
 }
 
-/**
- * Send a password reset link to the user.
- */
 export async function forgotPassword(
   req: Request,
   res: Response,
@@ -164,9 +137,6 @@ export async function forgotPassword(
   }
 }
 
-/**
- * Reset the user's password.
- */
 export async function resetPassword(
   req: Request,
   res: Response,

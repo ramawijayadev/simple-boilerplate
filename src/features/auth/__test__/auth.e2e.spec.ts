@@ -271,6 +271,43 @@ describe('Auth Feature E2E', () => {
       expect(res.status).toBe(403);
       expect(res.body.error.message).toMatch(/inactive/i);
     });
+
+    it('should deny login if account is soft-deleted', async () => {
+      await prisma.user.create({
+        data: {
+          name: 'Deleted',
+          email: 'deleted@example.com',
+          password: 'hash',
+          deletedAt: new Date(),
+        },
+      });
+
+      const res = await request(app).post('/api/v1/auth/login').send({
+        email: 'deleted@example.com',
+        password: 'any',
+      });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error.message).toMatch(/disabled/i);
+    });
+
+    it('should deny login if user has no password set (e.g. OAuth user)', async () => {
+      await prisma.user.create({
+        data: {
+          name: 'No Pass',
+          email: 'nopass@example.com',
+          password: null, // Simulate user created via external provider
+        },
+      });
+
+      const res = await request(app).post('/api/v1/auth/login').send({
+        email: 'nopass@example.com',
+        password: 'somepassword',
+      });
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.message).toMatch(/invalid credentials/i);
+    });
   });
 
   describe('Refresh Token', () => {

@@ -2,27 +2,18 @@ import { prisma } from '@/shared/utils/prisma';
 import type { User, UserSession, EmailVerificationToken, PasswordResetToken } from '@prisma/client';
 import { RegisterInput } from '@/features/auth/auth.types';
 
-/**
- * Find a user by their email address.
- */
 export async function findUserByEmail(email: string): Promise<User | null> {
   return prisma.user.findUnique({
     where: { email },
   });
 }
 
-/**
- * Find a user by their unique ID.
- */
 export async function findUserById(id: number): Promise<User | null> {
   return prisma.user.findUnique({
     where: { id },
   });
 }
 
-/**
- * Create a new user and a corresponding email verification token in a single transaction.
- */
 export async function createUser(
   input: RegisterInput,
   hashedPassword: string,
@@ -51,9 +42,6 @@ export async function createUser(
   });
 }
 
-/**
- * Update the user's login statistics, such as failed attempts and lockout expiration.
- */
 export async function updateUserLoginStats(
   userId: number,
   data: {
@@ -68,9 +56,6 @@ export async function updateUserLoginStats(
   });
 }
 
-/**
- * Create a new active session for a user.
- */
 export async function createSession(data: {
   userId: number;
   refreshTokenHash: string;
@@ -89,11 +74,6 @@ export async function createSession(data: {
   });
 }
 
-/**
- * Find a valid session by its refresh token hash.
- *
- * Ensures the session is not revoked or deleted.
- */
 export async function findSessionByHash(refreshTokenHash: string): Promise<UserSession | null> {
   return prisma.userSession.findFirst({
     where: {
@@ -107,9 +87,6 @@ export async function findSessionByHash(refreshTokenHash: string): Promise<UserS
   });
 }
 
-/**
- * Revoke a user session by ID.
- */
 export async function revokeSession(sessionId: number): Promise<UserSession> {
   return prisma.userSession.update({
     where: { id: sessionId },
@@ -119,9 +96,6 @@ export async function revokeSession(sessionId: number): Promise<UserSession> {
   });
 }
 
-/**
- * Rotate a refresh token by revoking the old session and creating a new one transactionally.
- */
 export async function rotateSession(
   oldSessionId: number,
   newSessionData: {
@@ -150,9 +124,6 @@ export async function rotateSession(
   });
 }
 
-/**
- * Store a password reset token for a user.
- */
 export async function createPasswordResetToken(data: {
   userId: number;
   tokenHash: string;
@@ -163,9 +134,6 @@ export async function createPasswordResetToken(data: {
   });
 }
 
-/**
- * Retrieve a password reset token by its hash, including the associated user.
- */
 export async function findPasswordResetToken(
   tokenHash: string
 ): Promise<(PasswordResetToken & { user: User }) | null> {
@@ -177,9 +145,6 @@ export async function findPasswordResetToken(
   });
 }
 
-/**
- * Mark a password reset token as used.
- */
 export async function markPasswordResetTokenUsed(id: number): Promise<PasswordResetToken> {
   return prisma.passwordResetToken.update({
     where: { id },
@@ -187,11 +152,6 @@ export async function markPasswordResetTokenUsed(id: number): Promise<PasswordRe
   });
 }
 
-/**
- * Reset a user's password transactionally.
- *
- * Updates the password, invalidates the reset token, and revokes all active sessions.
- */
 export async function resetPassword(
   userId: number,
   tokenId: number,
@@ -225,9 +185,6 @@ export async function resetPassword(
   });
 }
 
-/**
- * Find an email verification token by hash.
- */
 export async function findEmailVerificationToken(
   tokenHash: string
 ): Promise<EmailVerificationToken | null> {
@@ -236,11 +193,6 @@ export async function findEmailVerificationToken(
   });
 }
 
-/**
- * Verify a user's email transactionally.
- *
- * Updates the user's verified status and marks the token as used.
- */
 export async function verifyEmail(userId: number, tokenId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await tx.user.update({

@@ -1,10 +1,3 @@
-/**
- * Auth Service
- *
- * core business logic for authentication.
- * Includes helpers for Crypto (Argon2, JWT) and Email (Mailpit).
- */
-
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { addMinutes, addDays, isAfter } from 'date-fns';
 import { config } from '@/config';
@@ -28,15 +21,6 @@ import {
 } from '@/features/auth/auth.types';
 import { UnauthorizedError, ValidationError, ForbiddenError, NotFoundError } from '@/shared/errors';
 
-// ============================================
-// Core Logic
-// ============================================
-
-/**
- * Generate a new JWT access token for the given payload.
- *
- * @param  payload  The user session payload
- */
 function generateAccessToken(payload: UserSessionPayload): string {
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.accessExpiration as SignOptions['expiresIn'],
@@ -45,37 +29,23 @@ function generateAccessToken(payload: UserSessionPayload): string {
   });
 }
 
-/**
- * Generate a cryptographically secure refresh token.
- */
 function generateRefreshToken(): string {
   return generateRandomToken();
 }
 
-/**
- * Register a new user and send verification email.
- *
- * @param  input  The registration data
- * @throws ValidationError
- */
 import { ConflictError } from '@/shared/errors';
-
-// ... (imports)
 
 export async function register(
   input: RegisterInput
 ): Promise<{ message: string; user: { id: number; email: string; name: string } }> {
-  // Check for existing user registration...
   const existingUser = await authRepository.findUserByEmail(input.email);
 
   if (existingUser) {
     throw new ConflictError('Email already registered');
   }
 
-  // Hash the user's password...
   const hashedPassword = await hashPassword(input.password);
 
-  // Prepare verification token...
   const verificationToken = generateRandomToken();
   const verificationTokenHash = await hashToken(verificationToken);
   const tokenExpiresAt = addMinutes(new Date(), config.auth.emailTokenExpiresMinutes);
@@ -87,7 +57,6 @@ export async function register(
     tokenExpiresAt
   );
 
-  // Dispatch verification email...
   const verifyUrl = `${config.app.url}/verify-email?token=${verificationToken}`;
 
   await sendEmail(
@@ -106,17 +75,16 @@ export async function register(
   };
 }
 
-/**
- * Authenticate a user and create a new session.
- *
- * @param  input  The login credentials
- * @throws UnauthorizedError|ForbiddenError
- */
 export async function login(input: LoginInput): Promise<AuthTokens> {
   const user = await authRepository.findUserByEmail(input.email);
 
   if (!user) {
     throw new UnauthorizedError('Invalid credentials');
+  }
+
+  // Security: Prevent soft-deleted users from logging in
+  if (user.deletedAt) {
+    throw new ForbiddenError('Account is disabled');
   }
 
   if (!user.isActive) {
@@ -127,8 +95,12 @@ export async function login(input: LoginInput): Promise<AuthTokens> {
     throw new ForbiddenError(`Account locked until ${user.lockedUntil.toISOString()}`);
   }
 
-  // Verify the password...
-  const isValidPassword = await verifyPassword(input.password, user.password!);
+  // Security: Handle users with no password (e.g. Oauth only) gracefully
+  if (!user.password) {
+    throw new UnauthorizedError('Invalid credentials');
+  }
+
+  const isValidPassword = await verifyPassword(input.password, user.password);
 
   if (!isValidPassword) {
     const attempts = user.failedLoginAttempts + 1;
@@ -146,14 +118,12 @@ export async function login(input: LoginInput): Promise<AuthTokens> {
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  // Reset login statistics on success...
   await authRepository.updateUserLoginStats(user.id, {
     failedLoginAttempts: 0,
     lockedUntil: null,
     lastLoginAt: new Date(),
   });
 
-  // Create the session and tokens...
   const refreshToken = generateRefreshToken();
   const refreshTokenHash = await hashToken(refreshToken);
   const expiresAt = addDays(new Date(), config.auth.refreshTokenExpiresDays);
@@ -175,12 +145,6 @@ export async function login(input: LoginInput): Promise<AuthTokens> {
   return { accessToken, refreshToken };
 }
 
-/**
- * Refresh an existing session with a valid refresh token.
- *
- * @param  input  The refresh token input
- * @throws UnauthorizedError
- */
 export async function refresh(input: RefreshTokenInput): Promise<AuthTokens> {
   const refreshTokenHash = await hashToken(input.refreshToken);
 
@@ -198,7 +162,6 @@ export async function refresh(input: RefreshTokenInput): Promise<AuthTokens> {
     throw new UnauthorizedError('Session revoked');
   }
 
-  // Rotate the session token (Security Best Practice)...
   const newRefreshToken = generateRefreshToken();
   const newRefreshTokenHash = await hashToken(newRefreshToken);
   const newExpiresAt = addDays(new Date(), config.auth.refreshTokenExpiresDays);
@@ -220,21 +183,10 @@ export async function refresh(input: RefreshTokenInput): Promise<AuthTokens> {
   return { accessToken, refreshToken: newRefreshToken };
 }
 
-/**
- * Revoke the user's current session.
- *
- * @param  encodedUser  The current user session payload
- */
 export async function logout(encodedUser: UserSessionPayload): Promise<void> {
   await authRepository.revokeSession(encodedUser.sessionId);
 }
 
-/**
- * Verify a user's email address using a token.
- *
- * @param  input  The verification token
- * @throws NotFoundError|ValidationError
- */
 export async function verifyEmail(input: VerifyEmailInput): Promise<void> {
   const tokenHash = await hashToken(input.token);
 
@@ -255,12 +207,6 @@ export async function verifyEmail(input: VerifyEmailInput): Promise<void> {
   await authRepository.verifyEmail(tokenRecord.userId, tokenRecord.id);
 }
 
-/**
- * Get the profile of the currently authenticated user.
- *
- * @param  userId  The ID of the user
- * @throws NotFoundError
- */
 export async function getProfile(userId: number) {
   const user = await authRepository.findUserById(userId);
 
@@ -274,11 +220,6 @@ export async function getProfile(userId: number) {
   return profile;
 }
 
-/**
- * Initiate the password reset process.
- *
- * @param  input  The user's email address
- */
 export async function forgotPassword(input: ForgotPasswordInput): Promise<void> {
   const user = await authRepository.findUserByEmail(input.email);
 
@@ -303,12 +244,6 @@ export async function forgotPassword(input: ForgotPasswordInput): Promise<void> 
   );
 }
 
-/**
- * Reset the user's password using a valid token.
- *
- * @param  input  The reset token and new password
- * @throws NotFoundError|ValidationError
- */
 export async function resetPassword(input: ResetPasswordInput): Promise<void> {
   const tokenHash = await hashToken(input.token);
 
