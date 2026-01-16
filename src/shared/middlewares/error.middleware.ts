@@ -102,6 +102,15 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
+  // Guard against double response - if headers already sent, log and return
+  if (res.headersSent) {
+    logger.error(
+      { err: error, requestId: req.id, method: req.method, url: req.url },
+      'Error occurred after headers sent'
+    );
+    return;
+  }
+
   const statusCode = getStatusCode(error);
   const errorCode = getErrorCode(error);
   const isOperational = isOperationalError(error);

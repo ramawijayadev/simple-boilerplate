@@ -10,6 +10,7 @@ import {
   getProfile as getProfileService,
 } from '@/features/auth/auth.service';
 import { UserSessionPayload } from '@/features/auth/auth.types';
+import { UnauthorizedError } from '@/shared/errors';
 import { sendOk, sendCreated, getRequestId } from '@/shared/utils/apiResponse';
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -74,7 +75,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
 export async function me(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) {
-      throw new Error('User not authenticated');
+      throw new UnauthorizedError('User not authenticated');
     }
 
     const { userId } = req.user as UserSessionPayload;
