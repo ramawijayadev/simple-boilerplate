@@ -1,182 +1,150 @@
 # Express.js TypeScript API Server
 
-A production-ready backend API server built with TypeScript and Express.js, featuring security middleware, structured logging, and comprehensive error handling.
+A production-ready, security-focused backend API server built with TypeScript, Express.js, and PostgreSQL. It features robust authentication, standardized error handling, structured logging, and "batteries-included" developer tooling.
+
+## Features
+
+### 🛡️ Security First
+
+- **Authentication**: JWT-based auth with refresh token rotation and secure cookie support.
+- **Hardening**:
+  - `Helmet` for HTTP security headers (CSP, HSTS, etc.).
+  - `Rate Limiting` to prevent brute-force and DDoS attacks.
+  - `Argon2` for secure password hashing.
+  - Mitigated timing attacks on login and password reset.
+- **Validation**: Strict Zod schemas for all request inputs.
+
+### 🏗️ Backend Essentials
+
+- **Database**: Prisma ORM with PostgreSQL, supporting migrations and seeding.
+- **Logging**: Pino logger with structured JSON logs (prod) and pretty-printing (dev), including request ID tracking and sensitive data redaction.
+- **Error Handling**: Centralized, predictable error responses utilizing custom error classes (e.g., `NotFoundError`, `UnauthorizedError`).
+- **Pagination**: Pagination helpers for list endpoints.
+
+### 🐳 DevOps Ready
+
+- **Docker**: Fully Dockerized with `docker-compose` for easy orchestration of app and database.
+- **Config**: Type-safe configuration management aligned with environment variables.
 
 ## Prerequisites
 
-- Node.js (v16 or higher recommended)
+- Node.js (v18+ recommended)
 - pnpm
+- Docker & Docker Compose (optional, for containerized run)
 
 ## Quick Start
 
+### Local Development
+
+1.  **Install dependencies**
+    ```bash
+    pnpm install
+    ```
+
+2.  **Environment Setup**
+    ```bash
+    cp .env.example .env
+    # Update .env with your local DB credentials if needed
+    ```
+
+3.  **Database Setup**
+    ```bash
+    # Start Postgres (if not using your own)
+    docker-compose up -d postgres
+
+    # Run migrations and seed data
+    pnpm db:migrate
+    pnpm db:seed
+    ```
+
+4.  **Start Server**
+    ```bash
+    pnpm dev
+    ```
+
+### Using Docker
+
+Run the entire stack (App + DB) with Docker Compose:
+
 ```bash
-# Install dependencies
-pnpm install
-
-# Copy environment file
-cp .env.example .env
-
-# Start development server
-pnpm dev
+docker-compose up -d
 ```
 
 ## Environment Variables
 
-| Variable                  | Description             | Default                       |
-| ------------------------- | ----------------------- | ----------------------------- |
-| `NODE_ENV`                | Environment mode        | `development`                 |
-| `PORT`                    | Server port             | `3000`                        |
-| `CORS_ORIGIN`             | Allowed CORS origin(s)  | `http://localhost:3000`       |
-| `RATE_LIMIT_WINDOW_MS`    | Rate limit window (ms)  | `900000` (15 min)             |
-| `RATE_LIMIT_MAX_REQUESTS` | Max requests per window | `100`                         |
-| `LOG_LEVEL`               | Logging level           | `debug` (dev) / `info` (prod) |
-| `LOG_DIR`                 | Log files directory     | `logs`                        |
-| `REQUEST_BODY_LIMIT`      | Max request body size   | `10mb`                        |
-| `REQUEST_TIMEOUT_MS`      | Request timeout (ms)    | `30000`                       |
+| Variable                | Description                  | Default / Example         |
+| :---------------------- | :--------------------------- | :------------------------ |
+| **Server**              |                              |                           |
+| `NODE_ENV`              | Environment mode             | `development`             |
+| `PORT`                  | Server port                  | `3000`                    |
+| `APP_URL`               | Application URL              | `http://localhost:3000`   |
+| **Database**            |                              |                           |
+| `DATABASE_URL`          | Connection string            | `postgresql://...`        |
+| **Security**            |                              |                           |
+| `CORS_ORIGIN`           | Allowed CORS origin(s)       | `http://localhost:3000`   |
+| `RATE_LIMIT_...`        | Rate limiting config         | See `.env.example`        |
+| **Auth (JWT)**          |                              |                           |
+| `JWT_SECRET`            | Secret for signing tokens    | *Change this in prod*     |
+| `JWT_ACCESS_EXPIRATION` | Access token TTL             | `15m`                     |
+| `AUTH_...`              | Refresh/Reset token policies | See `.env.example`        |
+| **Logging**             |                              |                           |
+| `LOG_LEVEL`             | Logging verbosity            | `debug` / `info`          |
 
 ## Scripts
 
-| Script          | Description           |
-| --------------- | --------------------- |
-| `pnpm dev`      | Start with hot-reload |
-| `pnpm build`    | Compile TypeScript    |
-| `pnpm start`    | Run production build  |
-| `pnpm lint`     | Check linting         |
-| `pnpm lint:fix` | Fix linting issues    |
-| `pnpm format`   | Format with Prettier  |
-
-## API Endpoints
-
-### Health Check
-
-```http
-GET /health
-```
-
-```json
-{
-  "success": true,
-  "data": {
-    "status": "ok",
-    "timestamp": "2024-01-15T12:00:00.000Z"
-  },
-  "requestId": "uuid"
-}
-```
-
-## Features
-
-### Security Middleware
-
-- **Helmet** - HTTP security headers (CSP, HSTS, X-Frame-Options)
-- **CORS** - Cross-origin resource sharing
-- **Rate Limiting** - DDoS/brute force protection
-- **HPP** - HTTP Parameter Pollution protection
-
-### Request Handling
-
-- **Body Limits** - Configurable request body size limits
-- **Request Timeout** - Automatic timeout handling
-- **Validation** - Zod-based request validation
-
-### Logging (Pino)
-
-- **Development**: Pretty-printed colorized output
-- **Production**: Structured JSON logs with file rotation
-- **Features**: Request ID tracking, sensitive field redaction, child loggers
-
-### Error Handling
-
-Standardized error response format:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "Resource not found",
-    "details": {},
-    "stack": "..."
-  },
-  "requestId": "uuid"
-}
-```
-
-**Available error classes:**
-
-- `BadRequestError` (400)
-- `ValidationError` (400) - with field details
-- `UnauthorizedError` (401)
-- `ForbiddenError` (403)
-- `NotFoundError` (404)
-- `ConflictError` (409)
-- `AppError` - base class for custom errors
-
-**Usage:**
-
-```typescript
-import { NotFoundError, ValidationError } from './shared/errors';
-import { asyncHandler } from './shared/utils/asyncHandler';
-
-// Throw errors in handlers
-export const getUser = asyncHandler(async (req, res) => {
-  const user = await findUser(req.params.id);
-  if (!user) {
-    throw NotFoundError.resource('User', req.params.id);
-  }
-  res.json({ success: true, data: user });
-});
-```
-
-## Database (PostgreSQL & Prisma)
-
-The project uses Prisma ORM with PostgreSQL.
-
-### Scripts
-
-| Script             | Description                    |
-| ------------------ | ------------------------------ |
-| `pnpm db:generate` | Generate Prisma client         |
-| `pnpm db:migrate`  | Apply migrations               |
-| `pnpm db:seed`     | Seed database with sample data |
-| `pnpm db:studio`   | Open Prisma Studio GUI         |
-
-## Logging (Pino)
-
-Configured for both development and production with daily rotation.
-
-- **Development**:
-  - Console: Pretty-printed logs
-  - Files: `logs/app.YYYY-MM-DD.log` (All logs), `logs/error.YYYY-MM-DD.log` (Errors only)
-- **Production**:
-  - Console: JSON output
-  - Files: `logs/combined.log`, `logs/error.log` (unless daily rotation configured for prod)
-
-## Testing
-
-Built with Vitest and Supertest.
-
-```bash
-# Run unit & integration tests
-pnpm test
-
-# Run with coverage (requires @vitest/coverage-v8)
-pnpm test:coverage
-```
+| Script                  | Description                              |
+| :---------------------- | :--------------------------------------- |
+| `pnpm dev`              | Start development server with hot-reload |
+| `pnpm build`            | Compile TypeScript to `dist/`            |
+| `pnpm start`            | Run production build                     |
+| `pnpm test`             | Run unit & integration tests             |
+| `pnpm lint`             | Lint code with ESLint                    |
+| `pnpm db:migrate`       | Apply Prisma migrations                  |
+| `pnpm db:seed`          | Seed database                            |
+| `pnpm secrets:generate` | Generate secure random keys for `.env`   |
 
 ## Project Structure
 
 ```
 src/
-├── config/           # Environment & security config
-├── features/         # Feature-based modules (Controller, Service, Repository)
-│   ├── example/      # Example CRUD feature
-│   └── health/       # Health check feature
+├── config/           # Environment & security configuration
+├── features/         # Domain-driven feature modules
+│   ├── auth/         # Authentication (Login, Register, Refresh)
+│   ├── example/      # CRUD Example
+│   └── health/       # Health checks
 ├── shared/
-│   ├── errors/       # Custom error classes
-│   ├── middlewares/  # Express middlewares
-│   ├── types/        # Global types
-│   └── utils/        # Utilities (Logger, Prisma, AsyncHandler)
-├── app.ts            # App setup
+│   ├── errors/       # Custom error hierarchy
+│   ├── middlewares/  # Global middlewares (Auth, Error, RateLimit)
+│   ├── types/        # Global TypeScript definitions
+│   └── utils/        # Helpers (Logger, API Response, Encryption)
+├── app.ts            # Express app assembly
 └── server.ts         # Entry point
+```
+
+## API Response Format
+
+All API responses follow a consistent envelope structure:
+
+**Success:**
+
+```json
+{
+  "success": true,
+  "data": { ... },
+  "requestId": "abc-123"
+}
+```
+
+**Error:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RESOURCE_NOT_FOUND",
+    "message": "The requested user was not found.",
+    "details": {}
+  },
+  "requestId": "abc-123"
+}
 ```
