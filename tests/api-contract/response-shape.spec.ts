@@ -106,7 +106,7 @@ describe('Response Shape Contract Tests', () => {
       ];
 
       for (const { method, path, auth } of endpoints) {
-        const req = (request(app) as Record<string, CallableFunction>)[method](path);
+        const req = (request(app) as unknown as Record<string, CallableFunction>)[method](path);
         if (auth) req.set('Authorization', `Bearer ${token}`);
         const res = await req;
 
@@ -150,7 +150,7 @@ describe('Response Shape Contract Tests', () => {
       ];
 
       for (const { method, path, expectedStatus, auth } of errorEndpoints) {
-        const req = (request(app) as Record<string, CallableFunction>)[method](path);
+        const req = (request(app) as unknown as Record<string, CallableFunction>)[method](path);
         if (auth) req.set('Authorization', `Bearer ${token}`);
         const res = await req;
 
@@ -211,7 +211,7 @@ describe('Response Shape Contract Tests', () => {
       ];
 
       for (const { method, path, body, auth } of endpoints) {
-        const req = (request(app) as Record<string, CallableFunction>)[method](path);
+        const req = (request(app) as unknown as Record<string, CallableFunction>)[method](path);
         if (auth) req.set('Authorization', `Bearer ${token}`);
         if (body) req.send(body);
         const res = await req;
