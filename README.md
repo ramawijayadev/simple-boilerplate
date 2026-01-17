@@ -78,7 +78,7 @@ To run a second instance on the same machine without conflicts:
 2. Edit `.env.app2` and change **APP_NAME** and **PORTS**:
    ```bash
    # Unique name to prevent container name conflicts
-   APP_NAME=sellqo
+   APP_NAME=simple_boilerplate
 
    # Unique ports to prevent bind errors
    PORT=3001
@@ -89,7 +89,7 @@ To run a second instance on the same machine without conflicts:
 
 3. Start the second instance:
    ```bash
-   docker compose --env-file .env.app2 -p sellqo up -d
+   docker compose --env-file .env.app2 -p simple_boilerplate up -d
    ```
 
 ---
