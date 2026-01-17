@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ${APP_NAME:-express}-api
+    container_name: ${APP_NAME:?APP_NAME is required}-api
     restart: unless-stopped
     env_file:
       - .env.example
@@ -28,7 +28,7 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: ${APP_NAME:-express}-db
+    container_name: ${APP_NAME:?APP_NAME is required}-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -49,7 +49,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: ${APP_NAME:-express}-mailpit
+    container_name: ${APP_NAME:?APP_NAME is required}-mailpit
     restart: unless-stopped
     ports:
       - "${MAIL_SMTP_PORT:-1025}:1025"   # SMTP server
