@@ -6,9 +6,8 @@ services:
     container_name: ${APP_NAME:?APP_NAME is required}-api
     restart: unless-stopped
     env_file:
-      - .env.example
+      - .env
     environment:
-      # Override for Docker environment
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:postgres@db:5432/${DB_NAME:-express_db}?schema=public
       MAIL_HOST: mailpit
@@ -52,8 +51,8 @@ services:
     container_name: ${APP_NAME:?APP_NAME is required}-mailpit
     restart: unless-stopped
     ports:
-      - "${MAIL_SMTP_PORT:-1025}:1025"   # SMTP server
-      - "${MAIL_WEB_PORT:-8025}:8025"    # Web UI
+      - "${MAIL_SMTP_PORT:-1025}:1025"
+      - "${MAIL_WEB_PORT:-8025}:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
