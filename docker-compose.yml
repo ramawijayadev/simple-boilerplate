@@ -5,39 +5,15 @@ services:
       dockerfile: Dockerfile
     container_name: express-api
     restart: unless-stopped
+    env_file:
+      - .env.docker
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
-    environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: ${PORT:-3000}
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-express_db}?schema=public
-      # JWT
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      JWT_ISSUER: ${JWT_ISSUER:-express-api}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-express-api-client}
-      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
-      # App
-      APP_URL: ${APP_URL:-http://localhost:3000}
-      GRACEFUL_SHUTDOWN_TIMEOUT_MS: ${GRACEFUL_SHUTDOWN_TIMEOUT_MS:-10000}
-      # Security
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
-      # Auth
-      AUTH_REFRESH_TOKEN_EXPIRES_DAYS: ${AUTH_REFRESH_TOKEN_EXPIRES_DAYS:-7}
-      AUTH_EMAIL_TOKEN_EXPIRES_MINUTES: ${AUTH_EMAIL_TOKEN_EXPIRES_MINUTES:-1440}
-      AUTH_PASSWORD_RESET_TOKEN_EXPIRES_MINUTES: ${AUTH_PASSWORD_RESET_TOKEN_EXPIRES_MINUTES:-60}
-      AUTH_MAX_LOGIN_ATTEMPTS: ${AUTH_MAX_LOGIN_ATTEMPTS:-5}
-      AUTH_LOCK_DURATION_MINUTES: ${AUTH_LOCK_DURATION_MINUTES:-15}
-      # Logging
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      LOG_DIR: logs
-      # Mail (optional)
-      MAIL_HOST: ${MAIL_HOST:-}
-      MAIL_PORT: ${MAIL_PORT:-}
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     volumes:
       - ./logs:/app/logs
     networks:
@@ -48,19 +24,32 @@ services:
     container_name: express-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-express_db}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: express_db
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-express_db}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d express_db"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
+    networks:
+      - backend
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: express-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP server
+      - "8025:8025"   # Web UI
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
     networks:
       - backend
 
