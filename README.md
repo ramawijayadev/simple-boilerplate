@@ -52,6 +52,12 @@ docker compose up -d
 | Health Check | http://localhost:3000/api/v1/health |
 | Mailpit (Email UI) | http://localhost:8025 |
 
+**Test Credentials (seeded automatically):**
+| Field | Value |
+|-------|-------|
+| Email | `admin@example.com` |
+| Password | `password123` |
+
 **Useful Commands:**
 ```bash
 docker compose logs -f app     # View app logs
