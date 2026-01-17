@@ -3,14 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: express-api
+    container_name: ${APP_NAME:-express}-api
     restart: unless-stopped
     env_file:
       - .env.example
     environment:
       # Override for Docker environment
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/express_db?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/${DB_NAME:-express_db}?schema=public
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
       LOG_LEVEL: info
@@ -28,18 +28,18 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: express-db
+    container_name: ${APP_NAME:-express}-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: express_db
+      POSTGRES_DB: ${DB_NAME:-express_db}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d express_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME:-express_db}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -49,7 +49,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: express-mailpit
+    container_name: ${APP_NAME:-express}-mailpit
     restart: unless-stopped
     ports:
       - "${MAIL_SMTP_PORT:-1025}:1025"   # SMTP server
