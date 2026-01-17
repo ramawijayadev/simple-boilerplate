@@ -5,6 +5,17 @@ coverage
 .gitignore
 .env
 .env.example
+.env.docker
 logs
 *.md
+!README.md
 .DS_Store
+.vscode
+.idea
+*.log
+tests
+vitest.config.ts
+eslint.config.mjs
+.prettierrc
+.prettierignore
+tsconfig.eslint.json
