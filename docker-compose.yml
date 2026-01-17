@@ -8,7 +8,8 @@ services:
     env_file:
       - .env.example
     environment:
-      NODE_ENV: development
+      # Override for Docker environment
+      NODE_ENV: production
       DATABASE_URL: postgresql://postgres:postgres@db:5432/express_db?schema=public
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
@@ -34,7 +35,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: express_db
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -51,8 +52,8 @@ services:
     container_name: express-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"   # SMTP server
-      - "8025:8025"   # Web UI
+      - "${MAIL_SMTP_PORT:-1025}:1025"   # SMTP server
+      - "${MAIL_WEB_PORT:-8025}:8025"    # Web UI
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

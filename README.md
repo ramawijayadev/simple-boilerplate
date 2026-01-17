@@ -66,6 +66,28 @@ docker compose down            # Stop all containers
 docker compose down -v         # Stop and remove data
 ```
 
+### Running Multiple Instances
+
+You can run multiple instances of the application on the same machine by configuring ports.
+
+1. Create a separate `.env` file (e.g. `.env.app2`):
+   ```bash
+   cp .env.example .env.app2
+   ```
+
+2. Edit `.env.app2` and change the exposed ports:
+   ```bash
+   PORT=3001
+   DB_PORT=5433
+   MAIL_SMTP_PORT=1026
+   MAIL_WEB_PORT=8026
+   ```
+
+3. Start the second instance:
+   ```bash
+   docker compose --env-file .env.app2 -p app2 up -d
+   ```
+
 ---
 
 ### Option 2: Local Development
