@@ -6,7 +6,13 @@ services:
     container_name: express-api
     restart: unless-stopped
     env_file:
-      - .env.docker
+      - .env.example
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/express_db?schema=public
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      LOG_LEVEL: info
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     depends_on:

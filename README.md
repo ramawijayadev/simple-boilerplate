@@ -133,13 +133,14 @@ Server runs at http://localhost:3000
 
 ## Environment Configuration
 
-All configuration is managed through environment variables. Three files are provided:
+All configuration is managed through environment variables:
 
 | File | Purpose |
 |------|---------|
-| `.env.example` | Template with all variables documented |
-| `.env` | Local development configuration |
-| `.env.docker` | Docker Compose configuration |
+| `.env.example` | Template with all variables (used by Docker Compose) |
+| `.env` | Local development configuration (git-ignored) |
+
+> **Note**: Docker Compose reads from `.env.example` and overrides Docker-specific values (DATABASE_URL, MAIL_HOST) automatically.
 
 ### Key Variables
 
